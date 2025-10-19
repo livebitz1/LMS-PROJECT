@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import AuthWithRoleButton from "./AuthWithRoleButton";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -69,9 +70,9 @@ export default function Navbar() {
           <div className="absolute right-4 top-4 flex items-center gap-3 z-40">
             <div className="flex-shrink-0"> 
               <SignedOut>
-                <SignUpButton mode="modal">
-                  <button className="px-3 py-2 rounded-md bg-white text-black text-sm font-semibold shadow-sm border border-gray-200">Sign up</button>
-                </SignUpButton>
+                <AuthWithRoleButton mode="signup">
+                  <span className="px-3 py-2 rounded-md bg-white text-black text-sm font-semibold shadow-sm border border-gray-200">Sign up</span>
+                </AuthWithRoleButton>
               </SignedOut>
 
               <SignedIn>
@@ -95,7 +96,7 @@ export default function Navbar() {
         {/* Right: sketchy Sign up button only */}
         <div className="hidden md:flex justify-end">
           <SignedOut>
-            <SignUpButton mode="modal">
+            <AuthWithRoleButton mode="signup">
               <button
                 className="px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold shadow-[0_6px_0_rgba(0,0,0,0.08)] border-2 border-black/10 hover:scale-[1.02] transition-transform"
                 aria-label="Sign up"
@@ -111,7 +112,7 @@ export default function Navbar() {
                   <span>Sign up</span>
                 </span>
               </button>
-            </SignUpButton>
+            </AuthWithRoleButton>
           </SignedOut>
 
           <SignedIn>

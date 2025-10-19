@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Basic starter schema for LMS concepts. Adjust models as your app grows.
+model User {
+  id             String   @id @default(cuid())
+  clerkId        String   @unique
+  email          String   @unique
+  name           String?
+  firstName      String?
+  lastName       String?
+  profileImageUrl String?
+  role           String?  // 'student' | 'teacher'
+  createdAt      DateTime @default(now())
+  courses        Course[]
+}
+
+model Course {
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  description  String?
+  createdAt    DateTime @default(now())
+  instructorId String
+  instructor   User     @relation(fields: [instructorId], references: [id])
+  lessons      Lesson[]
+}
+
+model Lesson {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  createdAt DateTime @default(now())
+}

@@ -80,7 +80,7 @@ export default function Home() {
         </div>
 
         {/* Features / collaboration surface */}
-        <section className="mt-16">
+        <section className="mt-16 collaboration-shift">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold">Collaboration features</h2>
             <Link href="/features" className="text-sm text-gray-600 hover:underline">Explore all</Link>

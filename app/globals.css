@@ -144,3 +144,29 @@ a:hover {
   box-shadow: none !important;
   content: "" !important;
 }
+
+/* Shift main collaboration features when role modal is open (uses dynamic CSS var set by RoleModal) */
+html.role-modal-open .collaboration-shift,
+body.role-modal-open .collaboration-shift,
+:root.role-modal-open body .collaboration-shift {
+  transform: translateY(var(--role-modal-shift, 160px));
+}
+
+/* Also support a per-element class applied to the collaboration node for more reliable toggling */
+.collaboration-shift.role-modal-active {
+  transform: translateY(var(--role-modal-shift, 160px)) !important;
+}
+
+/* Smooth animation for the shift */
+.collaboration-shift {
+  transform: translateY(0) !important;
+  transition: transform 300ms cubic-bezier(.2,.9,.2,1) !important;
+}
+
+/* On smaller screens default fallbacks (if JS doesn't run) */
+@media (max-width: 640px) {
+   :root.role-modal-open body .collaboration-shift,
+   .collaboration-shift.role-modal-active {
+    transform: translateY(var(--role-modal-shift, 220px)) !important;
+   }
+}

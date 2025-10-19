@@ -6,7 +6,7 @@ import styled from 'styled-components';
 const Button = () => {
   return (
     <StyledWrapper>
-      <button className="button">
+      <button id="get-started-button" aria-haspopup="dialog" className="button">
         <div className="outline" />
         <div className="state state--default">
           <div className="icon">
