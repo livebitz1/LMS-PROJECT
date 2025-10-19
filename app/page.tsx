@@ -59,18 +59,31 @@ export default function Home() {
     <div className="bg-white text-slate-900 min-h-screen">
       {/* Header (unchanged layout elsewhere) */}
       <header className="border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 py-5 grid grid-cols-3 items-center">
+          {/* Left: Logo */}
           <div className="flex items-center gap-4">
             <div className="font-bold text-lg">LMS Pro</div>
-            <div className="text-sm text-gray-500 hidden sm:inline">Collaborate — students & teachers</div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="px-4 py-2 rounded-full border border-gray-200 text-sm">
-              Log In
-            </Link>
-            <Link href="/signup" className="px-4 py-2 rounded-full bg-black text-white text-sm">
-              Get Started
+          {/* Center: Navigation links */}
+          <nav className="flex items-center justify-center gap-6 text-sm text-gray-700">
+            <Link href="/" className="hover:text-black">Home</Link>
+            <Link href="/courses" className="hover:text-black">Courses</Link>
+            <Link href="/assignments" className="hover:text-black">Assignments</Link>
+            <Link href="/messages" className="hover:text-black">Messaging</Link>
+            <Link href="/gradebook" className="hover:text-black">Gradebook</Link>
+            <Link href="/about" className="hidden md:inline hover:text-black">About</Link>
+          </nav>
+
+          {/* Right: only sign up button (nothing else) */}
+          <div className="flex justify-end">
+            <Link
+              href="/signup"
+              className="px-4 py-2 rounded-full bg-black text-white text-sm"
+              style={{ color: '#fff' }}
+              aria-label="Sign up"
+            >
+              Sign up
             </Link>
           </div>
         </div>
