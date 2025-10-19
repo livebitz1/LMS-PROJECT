@@ -23,17 +23,17 @@ const Button = () => {
             </svg>
           </div>
           <p>
-            <span style={{ ['--i' as any]: '0' }}>S</span>
+            <span style={{ ['--i' as any]: '0' }}>G</span>
             <span style={{ ['--i' as any]: '1' }}>e</span>
-            <span style={{ ['--i' as any]: '2' }}>n</span>
-            <span style={{ ['--i' as any]: '3' }}>d</span>
-            <span style={{ ['--i' as any]: '4' }}>M</span>
-            <span style={{ ['--i' as any]: '5' }}>e</span>
-            <span style={{ ['--i' as any]: '6' }}>s</span>
-            <span style={{ ['--i' as any]: '7' }}>s</span>
-            <span style={{ ['--i' as any]: '8' }}>a</span>
-            <span style={{ ['--i' as any]: '9' }}>g</span>
-            <span style={{ ['--i' as any]: '10' }}>e</span>
+            <span style={{ ['--i' as any]: '2' }}>t</span>
+            <span style={{ ['--i' as any]: '2' }}>&nbsp;</span>
+            <span style={{ ['--i' as any]: '4' }}>S</span>
+            <span style={{ ['--i' as any]: '5' }}>t</span>
+            <span style={{ ['--i' as any]: '6' }}>a</span>
+            <span style={{ ['--i' as any]: '7' }}>r</span>
+            <span style={{ ['--i' as any]: '8' }}>t</span>
+            <span style={{ ['--i' as any]: '9' }}>e</span>
+            <span style={{ ['--i' as any]: '10' }}>d</span>
           </p>
         </div>
         <div className="state state--sent">

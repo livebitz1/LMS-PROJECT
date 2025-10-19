@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import GetStartedButton from "./components/GetStartedButton";
+import Navbar from "./components/Navbar";
 
 export default function Home() {
   const [role, setRole] = useState<"student" | "teacher">("student");
@@ -59,38 +60,8 @@ export default function Home() {
 
   return (
     <div className="bg-white text-slate-900 min-h-screen">
-      {/* Header (unchanged layout elsewhere) */}
-      <header className="border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 py-5 grid grid-cols-3 items-center">
-          {/* Left: Logo */}
-          <div className="flex items-center gap-4">
-            <div className="font-bold text-lg">LMS Pro</div>
-          </div>
-
-          {/* Center: Navigation links */}
-          <nav className="flex items-center justify-center gap-6 text-sm text-gray-700">
-            <Link href="/" className="hover:text-black">Home</Link>
-            <Link href="/courses" className="hover:text-black">Courses</Link>
-            <Link href="/assignments" className="hover:text-black">Assignments</Link>
-            <Link href="/messages" className="hover:text-black">Messaging</Link>
-            <Link href="/gradebook" className="hover:text-black">Gradebook</Link>
-            <Link href="/about" className="hidden md:inline hover:text-black">About</Link>
-          </nav>
-
-          {/* Right: only sign up button (nothing else) */}
-          <div className="flex justify-end">
-            <SignedOut>
-              <SignUpButton mode="modal">
-                <button className="px-4 py-2 rounded-full bg-black text-white text-sm" aria-label="Sign up">Sign up</button>
-              </SignUpButton>
-            </SignedOut>
-
-            <SignedIn>
-              <UserButton appearance={{ elements: { userButtonAvatarBox: 'w-10 h-10' } }} />
-            </SignedIn>
-          </div>
-        </div>
-      </header>
+      {/* Navbar component */}
+      <Navbar />
 
       {/* Hero */}
       <main className="max-w-6xl mx-auto px-6 py-20">
