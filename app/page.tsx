@@ -1,103 +1,195 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [role, setRole] = useState<"student" | "teacher">("student");
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<null | "idle" | "loading" | "success" | "error">("idle");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  function validateEmail(value: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    if (!validateEmail(email)) {
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 2500);
+      return;
+    }
+
+    setStatus("loading");
+    // Simulate API call to create an early-access account
+    await new Promise((r) => setTimeout(r, 800));
+    setStatus("success");
+    setEmail("");
+    setTimeout(() => setStatus("idle"), 2500);
+  }
+
+  const FEATURES = [
+    {
+      id: "courses",
+      title: "Courses",
+      desc: "Create, organize and share course material with rich content and modules.",
+      href: "/courses",
+    },
+    {
+      id: "assignments",
+      title: "Assignments",
+      desc: "Assign homework, collect submissions, and give feedback inline.",
+      href: "/assignments",
+    },
+    {
+      id: "messaging",
+      title: "Messaging",
+      desc: "Direct messaging and group discussions to keep students and teachers connected.",
+      href: "/messages",
+    },
+    {
+      id: "gradebook",
+      title: "Gradebook",
+      desc: "Track progress, grades, and analytics for each student and course.",
+      href: "/gradebook",
+    },
+  ];
+
+  return (
+    <div className="bg-white text-slate-900 min-h-screen">
+      {/* Header (unchanged layout elsewhere) */}
+      <header className="border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="font-bold text-lg">LMS Pro</div>
+            <div className="text-sm text-gray-500 hidden sm:inline">Collaborate — students & teachers</div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="px-4 py-2 rounded-full border border-gray-200 text-sm">
+              Log In
+            </Link>
+            <Link href="/signup" className="px-4 py-2 rounded-full bg-black text-white text-sm">
+              Get Started
+            </Link>
+          </div>
         </div>
+      </header>
+
+      {/* Hero */}
+      <main className="max-w-6xl mx-auto px-6 py-20">
+        <div className="text-center">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight">
+            Learn together, teach better.
+          </h1>
+          <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+            A collaborative LMS where students and teachers create, share and track learning — all in one place.
+          </p>
+
+          {/* Role selection + signup */}
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <div className="inline-flex items-center rounded-full bg-gray-50 p-1">
+              <button
+                onClick={() => setRole("student")}
+                className={`px-5 py-2 rounded-full ${role === "student" ? "bg-black text-white" : "text-gray-700"}`}
+                aria-pressed={role === "student"}
+              >
+                I'm a student
+              </button>
+              <button
+                onClick={() => setRole("teacher")}
+                className={`px-5 py-2 rounded-full ${role === "teacher" ? "bg-black text-white" : "text-gray-700"}`}
+                aria-pressed={role === "teacher"}
+              >
+                I'm a teacher
+              </button>
+            </div>
+
+            <form onSubmit={handleSignup} className="mt-4 flex items-center gap-3 w-full max-w-xl">
+              <label htmlFor="email" className="sr-only">Your Email</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={role === "teacher" ? "Teacher email" : "Student email"}
+                className="flex-1 border border-gray-200 rounded-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-black"
+                aria-invalid={status === "error"}
+              />
+              <button
+                type="submit"
+                className="rounded-full bg-black text-white px-5 py-3"
+              >
+                {status === "loading" ? "Signing…" : "Request Access"}
+              </button>
+            </form>
+
+            {status === "error" && (
+              <div className="mt-3 text-sm text-red-600">Please enter a valid email address.</div>
+            )}
+            {status === "success" && (
+              <div className="mt-3 text-sm text-green-600">Thanks — we sent next steps to your inbox.</div>
+            )}
+
+            <div className="mt-6 text-sm text-gray-600">
+              Already have an account? <Link href="/login" className="underline">Sign in</Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Features / collaboration surface */}
+        <section className="mt-16">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold">Collaboration features</h2>
+            <Link href="/features" className="text-sm text-gray-600 hover:underline">Explore all</Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {FEATURES.map((f) => (
+              <Link
+                key={f.id}
+                href={f.href}
+                className="group block relative rounded-2xl p-6 bg-white border border-transparent hover:border-gray-100 shadow-sm hover:shadow-lg transition-transform transform hover:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                aria-labelledby={`feature-${f.id}-title`}
+              >
+                <div className="h-full flex flex-col justify-between">
+                  <div>
+                    <div className="text-xs uppercase tracking-wide text-gray-400 mb-2">{f.title}</div>
+                    <h3 id={`feature-${f.id}-title`} className="text-2xl font-semibold text-slate-900 mb-3">{f.title}</h3>
+                    <p className="text-sm text-gray-600">{f.desc}</p>
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="text-sm text-gray-500 group-hover:text-slate-700 transition">Learn more</div>
+
+                    <span className="ml-4">
+                      <span className="sr-only">Open {f.title}</span>
+                      <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-arrow-right">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </div>
+                    </span>
+                  </div>
+                </div>
+                {/* Decorative focus ring element for better contrast on keyboard navigation */}
+                <span className="absolute -inset-px rounded-2xl pointer-events-none" aria-hidden />
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-8 border-t pt-6 flex items-center justify-between text-sm text-gray-600">
+            <div className="flex gap-4">
+              <Link href="/terms" className="hover:underline">Terms</Link>
+              <span>•</span>
+              <Link href="/stories" className="hover:underline">Customer Stories</Link>
+            </div>
+
+            <Link href="/onboarding" className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-200">→</Link>
+          </div>
+        </section>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }

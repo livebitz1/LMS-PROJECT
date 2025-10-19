@@ -1,26 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* cartoonish pastel palette */
+  --bg-start: #fffef6; /* warm paper */
+  --bg-end: #f7fff1; /* soft mint */
+  --accent-1: #7be495; /* mint */
+  --accent-2: #ffd166; /* soft yellow */
+  --accent-3: #c59cff; /* pastel purple */
+  --ink: #0f172a; /* primary text */
+  --muted: #6b7280;
+  --card-border: #ffeecc;
+  --card-shadow-color: rgba(15,23,42,0.06);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* keep dark-scheme variables consistent but still doodly (we intentionally don't invert to full dark) */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg-start: #fffef6;
+    --bg-end: #f7fff1;
   }
 }
 
+/* Body: playful font + paper background with subtle doodle texture */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(180deg, var(--bg-start), var(--bg-end));
+  background-image: radial-gradient(circle at 10% 10%, rgba(255,255,255,0.6) 0px, rgba(255,255,255,0) 60px),
+                    radial-gradient(circle at 90% 90%, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0) 80px);
+  background-repeat: no-repeat;
+  color: var(--ink);
+  font-family: 'Baloo 2', 'Comic Sans MS', -apple-system, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Cartoonish card style: heavier rounded corners, hand-drawn-like border (solid with slight offset shadow) */
+.rounded-2xl {
+  border-radius: 20px !important;
+  border: 6px solid var(--card-border) !important;
+  background-clip: padding-box;
+  box-shadow: 8px 10px 0 var(--card-shadow-color), 0 10px 24px rgba(15,23,42,0.06) !important;
+}
+
+/* Buttons: doodly rounded, hand-drawn feel with dashed outline on focus */
+button, .btn {
+  border-radius: 9999px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+button:focus, a:focus {
+  outline: none;
+  box-shadow: 0 0 0 6px rgba(123,228,149,0.12);
+  transform: translateY(-2px);
+}
+
+/* Large circular CTAs */
+.w-10.h-10, .w-9.h-9, .w-10.h-10 > * {
+  border-radius: 9999px;
+}
+
+/* Slight playful tilt on hover to make UI feel 'doodly' */
+.group:hover .rounded-2xl, .group:focus-within .rounded-2xl {
+  transform: translateY(-6px) rotate(-0.8deg);
+}
+
+/* Emphasize headings with a hand-drawn underline effect */
+h1, h2, h3 {
+  position: relative;
+}
+h1::after, h2::after, h3::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 40px;
+  height: 6px;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-3));
+  border-radius: 8px;
+  opacity: 0.9;
+}
+
+/* Muted link styles to match playful theme */
+a {
+  color: var(--ink);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Focus-visible for accessibility with doodly outline */
+:focus-visible {
+  outline: 3px dashed rgba(0,0,0,0.08);
+  outline-offset: 6px;
+}
+
+/* Small helper to apply a scribble-like border on some hero elements via background pattern */
+.scribble-border {
+  background-image: linear-gradient(transparent, transparent), radial-gradient(circle at 10% 10%, rgba(0,0,0,0.02), rgba(0,0,0,0));
+}
+
+/* Keep print/tailwind utilities functioning */
+@media print {
+  body { background: white; }
 }
