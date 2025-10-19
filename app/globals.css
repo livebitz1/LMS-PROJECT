@@ -68,17 +68,6 @@ button:focus, a:focus {
 h1, h2, h3 {
   position: relative;
 }
-h1::after, h2::after, h3::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -8px;
-  width: 40px;
-  height: 6px;
-  background: linear-gradient(90deg, var(--accent-1), var(--accent-3));
-  border-radius: 8px;
-  opacity: 0.9;
-}
 
 /* Muted link styles to match playful theme */
 a {

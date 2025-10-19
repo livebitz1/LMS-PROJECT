@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import GetStartedButton from "./components/GetStartedButton";
 
 export default function Home() {
   const [role, setRole] = useState<"student" | "teacher">("student");
@@ -101,54 +102,9 @@ export default function Home() {
             A collaborative LMS where students and teachers create, share and track learning — all in one place.
           </p>
 
-          {/* Role selection + signup */}
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <div className="inline-flex items-center rounded-full bg-gray-50 p-1">
-              <button
-                onClick={() => setRole("student")}
-                className={`px-5 py-2 rounded-full ${role === "student" ? "bg-black text-white" : "text-gray-700"}`}
-                aria-pressed={role === "student"}
-              >
-                I'm a student
-              </button>
-              <button
-                onClick={() => setRole("teacher")}
-                className={`px-5 py-2 rounded-full ${role === "teacher" ? "bg-black text-white" : "text-gray-700"}`}
-                aria-pressed={role === "teacher"}
-              >
-                I'm a teacher
-              </button>
-            </div>
-
-            <form onSubmit={handleSignup} className="mt-4 flex items-center gap-3 w-full max-w-xl">
-              <label htmlFor="email" className="sr-only">Your Email</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={role === "teacher" ? "Teacher email" : "Student email"}
-                className="flex-1 border border-gray-200 rounded-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-black"
-                aria-invalid={status === "error"}
-              />
-              <button
-                type="submit"
-                className="rounded-full bg-black text-white px-5 py-3"
-              >
-                {status === "loading" ? "Signing…" : "Request Access"}
-              </button>
-            </form>
-
-            {status === "error" && (
-              <div className="mt-3 text-sm text-red-600">Please enter a valid email address.</div>
-            )}
-            {status === "success" && (
-              <div className="mt-3 text-sm text-green-600">Thanks — we sent next steps to your inbox.</div>
-            )}
-
-            <div className="mt-6 text-sm text-gray-600">
-              Already have an account? <Link href="/login" className="underline">Sign in</Link>
-            </div>
+          {/* Single Get Started CTA component */}
+          <div className="mt-8 flex items-center justify-center">
+            <GetStartedButton />
           </div>
         </div>
 
