@@ -104,3 +104,54 @@ a:hover {
 @media print {
   body { background: white; }
 }
+
+/* Remove small decorative "glitter" / progress accent inside auth modals
+   (targets progressbar roles inside dialog and common Clerk class names).
+   Using !important to override third-party styles only for that decorative element. */
+[role="dialog"] [role="progressbar"],
+[role="dialog"] .clerk-progress,
+[role="dialog"] .cl-progress,
+.clerk-modal [role="progressbar"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Additional selectors to hide any remaining small decorative gradient/progress bars
+   inside auth/dialog modals. These target inline-styled gradients, tiny-height bars,
+   and common progress/glitter class name patterns. Kept scoped to [role="dialog"] */
+[role="dialog"] [style*="linear-gradient"],
+[role="dialog"] [style*="radial-gradient"],
+[role="dialog"] [style*="height:6px"],
+[role="dialog"] [style*="height: 6px"],
+[role="dialog"] [style*="height:8px"],
+[role="dialog"] [style*="height: 8px"],
+[role="dialog"] [style*="height:10px"],
+[role="dialog"] [style*="height: 10px"],
+[role="dialog"] div[class*="progress"],
+[role="dialog"] span[class*="progress"],
+[role="dialog"] div[class*="glitter"],
+[role="dialog"] span[class*="glitter"],
+[role="dialog"] div[class*="bar"],
+[role="dialog"] span[class*="bar"],
+[role="dialog"] .clerk-progress,
+[role="dialog"] .cl-progress,
+[role="dialog"] .clerk-modal .progressbar {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  background-image: none !important;
+  background: transparent !important;
+}
+
+/* Final safeguard: remove any pseudo-element decorations inside auth modals
+   (covers ::before / ::after with gradient backgrounds or small bars). Scoped
+   to [role="dialog"] so it won't affect the rest of the site. */
+[role="dialog"] *::before,
+[role="dialog"] *::after {
+  display: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  content: "" !important;
+}

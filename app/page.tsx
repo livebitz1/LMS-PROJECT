@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 export default function Home() {
   const [role, setRole] = useState<"student" | "teacher">("student");
@@ -77,14 +78,15 @@ export default function Home() {
 
           {/* Right: only sign up button (nothing else) */}
           <div className="flex justify-end">
-            <Link
-              href="/signup"
-              className="px-4 py-2 rounded-full bg-black text-white text-sm"
-              style={{ color: '#fff' }}
-              aria-label="Sign up"
-            >
-              Sign up
-            </Link>
+            <SignedOut>
+              <SignUpButton mode="modal">
+                <button className="px-4 py-2 rounded-full bg-black text-white text-sm" aria-label="Sign up">Sign up</button>
+              </SignUpButton>
+            </SignedOut>
+
+            <SignedIn>
+              <UserButton appearance={{ elements: { userButtonAvatarBox: 'w-10 h-10' } }} />
+            </SignedIn>
           </div>
         </div>
       </header>
