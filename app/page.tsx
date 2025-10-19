@@ -66,7 +66,7 @@ export default function Home() {
       {/* Hero */}
       <main className="max-w-6xl mx-auto px-6 py-20">
         <div className="text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold leading-tight">
             Learn together, teach better.
           </h1>
           <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">

@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 export default function Navbar() {
+  const [open, setOpen] = useState(false);
   return (
-    <header className="border-b border-gray-100 bg-white/60 backdrop-blur-sm">
+    <header className="border-b border-gray-100 bg-white/60 backdrop-blur-sm relative">
       <div className="max-w-7xl mx-auto px-6 py-4 grid grid-cols-3 items-center">
         {/* Left: Logo (playful badge) */}
         <div className="flex items-center gap-4">
@@ -22,8 +24,8 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Center: Navigation links (playful, doodly minimal) */}
-        <nav role="navigation" aria-label="Primary" className="flex items-center justify-center">
+        {/* Center: Navigation links (desktop only) */}
+        <nav role="navigation" aria-label="Primary" className="hidden md:flex items-center justify-center">
           <ul className="flex gap-6 text-sm md:text-base items-center">
             <li>
               <Link href="/" className="relative group inline-block">
@@ -62,8 +64,36 @@ export default function Navbar() {
           </ul>
         </nav>
 
+        {/* Mobile controls: sign up/user + hamburger at top-right (absolute within header so visually top-right; menu panel remains in flow) */}
+        <div className="md:hidden">
+          <div className="absolute right-4 top-4 flex items-center gap-3 z-40">
+            <div className="flex-shrink-0"> 
+              <SignedOut>
+                <SignUpButton mode="modal">
+                  <button className="px-3 py-2 rounded-md bg-white text-black text-sm font-semibold shadow-sm border border-gray-200">Sign up</button>
+                </SignUpButton>
+              </SignedOut>
+
+              <SignedIn>
+                <UserButton appearance={{ elements: { userButtonAvatarBox: 'w-9 h-9 rounded-md' } }} />
+              </SignedIn>
+            </div>
+
+            <button
+              onClick={() => setOpen((s) => !s)}
+              aria-expanded={open}
+              aria-label="Open menu"
+              className="inline-flex items-center justify-center p-2 rounded-md border border-gray-200 bg-white shadow-sm"
+            >
+              <svg className={`w-6 h-6 transition-transform ${open ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
         {/* Right: sketchy Sign up button only */}
-        <div className="flex justify-end">
+        <div className="hidden md:flex justify-end">
           <SignedOut>
             <SignUpButton mode="modal">
               <button
@@ -89,6 +119,21 @@ export default function Navbar() {
           </SignedIn>
         </div>
       </div>
+
+      {/* Mobile menu panel (stacked links) - now in normal flow so it expands the header and pushes content down */}
+      {open && (
+        <div className="md:hidden bg-white shadow-lg border-t border-gray-100">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <ul className="flex flex-col gap-3">
+              <li><Link href="/" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Home</Link></li>
+              <li><Link href="/courses" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Courses</Link></li>
+              <li><Link href="/assignments" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Assignments</Link></li>
+              <li><Link href="/messages" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Messaging</Link></li>
+              <li><Link href="/gradebook" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Gradebook</Link></li>
+            </ul>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

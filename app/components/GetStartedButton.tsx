@@ -46,10 +46,6 @@ const Button = () => {
             </svg>
           </div>
           <p>
-            <span style={{ ['--i' as any]: '5' }}>S</span>
-            <span style={{ ['--i' as any]: '6' }}>e</span>
-            <span style={{ ['--i' as any]: '7' }}>n</span>
-            <span style={{ ['--i' as any]: '8' }}>t</span>
           </p>
         </div>
       </button>
