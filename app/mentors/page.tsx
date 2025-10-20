@@ -25,6 +25,7 @@ export default async function MentorsPage() {
     profiles = (rows || []).map((r: any) => ({
       id: r.id,
       userId: r.userId,
+      displayName: r.displayName ?? null,
       bio: r.bio,
       degree: r.degree,
       experienceYears: r.experienceYears,

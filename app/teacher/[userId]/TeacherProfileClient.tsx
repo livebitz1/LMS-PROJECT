@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 type ProfileSerialized = {
   id: string;
   userId: string;
+  displayName?: string | null;
   bio?: string | null;
   degree?: string | null;
   experienceYears?: number | null;
@@ -23,7 +24,7 @@ type ProfileSerialized = {
 };
 
 export default function TeacherProfileClient({ profile }: { profile: ProfileSerialized }) {
-  const name = profile.user?.name || `${profile.user?.firstName || ''} ${profile.user?.lastName || ''}`.trim() || profile.user?.email;
+  const name = profile.displayName || profile.user?.name || `${profile.user?.firstName || ''} ${profile.user?.lastName || ''}`.trim() || profile.user?.email;
 
   return (
     <main className="max-w-4xl mx-auto px-6 py-12">

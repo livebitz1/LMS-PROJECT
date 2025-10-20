@@ -46,6 +46,7 @@ model TeacherProfile {
   id             String   @id @default(cuid())
   user           User     @relation(fields: [userId], references: [id])
   userId         String   @unique
+  displayName    String?  // public name shown on Mentors (separate from User.name)
   bio            String?
   degree         String?
   experienceYears Int?

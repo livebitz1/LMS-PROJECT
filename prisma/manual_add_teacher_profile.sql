@@ -7,6 +7,7 @@ ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "role" text;
 CREATE TABLE IF NOT EXISTS "TeacherProfile" (
   id text PRIMARY KEY,
   "userId" text UNIQUE NOT NULL,
+  "displayName" text,
   bio text,
   degree text,
   "experienceYears" integer,
@@ -21,5 +22,8 @@ CREATE TABLE IF NOT EXISTS "TeacherProfile" (
     REFERENCES "User"(id)
     ON DELETE CASCADE
 );
+
+-- Also ensure existing installations get the new column non-destructively
+ALTER TABLE "TeacherProfile" ADD COLUMN IF NOT EXISTS "displayName" text;
 
 COMMIT;

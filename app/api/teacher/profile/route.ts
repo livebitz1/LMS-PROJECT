@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     if (!clerkUserId) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
 
     const body = await req.json();
-    const { firstName, lastName, bio, degree, experienceYears, subjects, linkedin, skills } = body || {};
+    const { firstName, lastName, displayName, bio, degree, experienceYears, subjects, linkedin, skills } = body || {};
 
     // Resolve internal user id from clerkId
     const user = await prisma.user.findUnique({ where: { clerkId: clerkUserId } });
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     const userId = user.id;
 
-    // Update basic user fields (by internal id)
+    // Update basic user fields (by internal id) - keep these as optional
     const userUpdateData: any = {};
     if (firstName !== undefined) userUpdateData.firstName = firstName || null;
     if (lastName !== undefined) userUpdateData.lastName = lastName || null;
@@ -29,8 +29,11 @@ export async function POST(req: NextRequest) {
       await prisma.user.update({ where: { id: userId }, data: userUpdateData });
     }
 
-    // Prepare profile payload
+    // Prepare profile payload, include displayName (prefer explicit displayName, otherwise derive from first/last)
+    const computedDisplayName = (typeof displayName === 'string' && displayName.trim()) ? displayName.trim() : ((firstName || lastName) ? `${firstName ?? ''} ${lastName ?? ''}`.trim() : null);
+
     const profileData: any = {
+      displayName: computedDisplayName ?? null,
       bio: bio ?? null,
       degree: degree ?? null,
       experienceYears: experienceYears ?? null,
@@ -61,6 +64,7 @@ export async function POST(req: NextRequest) {
       if (existing && existing.length > 0) {
         await prisma.$executeRaw`
           UPDATE "TeacherProfile" SET
+            "displayName" = ${profileData.displayName},
             bio = ${profileData.bio},
             degree = ${profileData.degree},
             "experienceYears" = ${profileData.experienceYears},
@@ -75,8 +79,8 @@ export async function POST(req: NextRequest) {
       } else {
         const newId = randomUUID();
         await prisma.$executeRaw`
-          INSERT INTO "TeacherProfile" (id, "userId", bio, degree, "experienceYears", subjects, skills, linkedin, "createdAt", "updatedAt")
-          VALUES (${newId}, ${userId}, ${profileData.bio}, ${profileData.degree}, ${profileData.experienceYears}, ${subjectsJson}::jsonb, ${skillsJson}::jsonb, ${profileData.linkedin}, now(), now())
+          INSERT INTO "TeacherProfile" (id, "userId", "displayName", bio, degree, "experienceYears", subjects, skills, linkedin, "createdAt", "updatedAt")
+          VALUES (${newId}, ${userId}, ${profileData.displayName}, ${profileData.bio}, ${profileData.degree}, ${profileData.experienceYears}, ${subjectsJson}::jsonb, ${skillsJson}::jsonb, ${profileData.linkedin}, now(), now())
         `;
         const rows: any = await prisma.$queryRaw`SELECT * FROM "TeacherProfile" WHERE "userId" = ${userId} LIMIT 1`;
         profile = rows[0] ?? null;

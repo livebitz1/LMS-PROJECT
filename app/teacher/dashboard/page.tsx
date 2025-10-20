@@ -56,6 +56,7 @@ export default async function TeacherDashboardPage() {
     ? {
         id: teacherProfile.id,
         userId: teacherProfile.userId,
+        displayName: teacherProfile.displayName ?? null,
         bio: teacherProfile.bio ?? null,
         degree: teacherProfile.degree ?? null,
         experienceYears: teacherProfile.experienceYears ?? null,
@@ -77,7 +78,6 @@ export default async function TeacherDashboardPage() {
 
         {/* Pass serialized user and profile to the client editor component */}
         {/* Server -> Client prop passing of serializable data */}
-        {/* @ts-expect-error server -> client prop */}
         <TeacherProfileEditor user={userSerialized} profile={profileSerialized} />
       </main>
     </>

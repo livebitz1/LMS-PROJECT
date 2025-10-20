@@ -23,6 +23,7 @@ type User = {
 type Profile = {
   id: string;
   userId: string;
+  displayName?: string | null;
   bio?: string | null;
   degree?: string | null;
   experienceYears?: number | null;
@@ -38,6 +39,7 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
   const router = useRouter();
   const [firstName, setFirstName] = useState(user.firstName ?? '');
   const [lastName, setLastName] = useState(user.lastName ?? '');
+  const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -59,7 +61,12 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
     setSubjects(Array.isArray(profile.subjects) ? profile.subjects.join(', ') : profile.subjects ?? '');
     setLinkedin(profile.linkedin ?? '');
     setSkills(Array.isArray(profile.skills) ? profile.skills : profile.skills ?? []);
-  }, [profile]);
+
+    // Prefill displayName: prefer explicit profile.displayName, otherwise derive from user
+    let derived = profile.displayName ?? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
+    if (!derived) derived = user.name ?? '';
+    setDisplayName(derived);
+  }, [profile, user.firstName, user.lastName, user.name]);
 
   const addSkill = () => {
     const s = skillInput.trim();
@@ -79,6 +86,7 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
         body: JSON.stringify({
           firstName,
           lastName,
+          displayName,
           bio,
           degree,
           experienceYears: experienceYears === '' ? undefined : experienceYears,
@@ -123,9 +131,10 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
           <AvatarFallback>{(user.firstName?.[0] || user.email?.[0] || 'U').toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Input value={firstName} onChange={(e: any) => setFirstName(e.target.value)} placeholder="First name" />
             <Input value={lastName} onChange={(e: any) => setLastName(e.target.value)} placeholder="Last name" />
+            <Input value={displayName} onChange={(e: any) => setDisplayName(e.target.value)} placeholder="Public display name (shown on Mentors)" />
           </div>
         </div>
       </div>

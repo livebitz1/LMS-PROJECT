@@ -10,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 type Profile = {
   id: string;
   userId: string;
+  displayName?: string | null;
   bio?: string | null;
   degree?: string | null;
   experienceYears?: number | null;
@@ -42,7 +43,7 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return profiles.filter((p) => {
-      const name = (p.user?.name || `${p.user?.firstName || ''} ${p.user?.lastName || ''}` || '').toLowerCase();
+      const name = (p.displayName || p.user?.name || `${p.user?.firstName || ''} ${p.user?.lastName || ''}` || '').toLowerCase();
       const degree = String(p.degree ?? '').toLowerCase();
       const bio = String(p.bio ?? '').toLowerCase();
       const subjects = Array.isArray(p.subjects) ? p.subjects.map((s:any)=>String(s).toLowerCase()) : [];
@@ -105,7 +106,7 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
         {filtered.map((p) => {
           const skills = Array.isArray(p.skills) ? p.skills.map((s:any)=> typeof s === 'string' ? s : String(s)) : [];
           const subjects = Array.isArray(p.subjects) ? p.subjects.map((s:any)=> typeof s === 'string' ? s : String(s)) : [];
-          const displayName = p.user?.name || `${p.user?.firstName || ''} ${p.user?.lastName || ''}`.trim() || p.user?.email;
+          const displayName = p.displayName || p.user?.name || `${p.user?.firstName || ''} ${p.user?.lastName || ''}`.trim() || p.user?.email;
 
           return (
             <Card key={p.id} className="border-2 border-dashed border-emerald-200 bg-gradient-to-br from-white to-emerald-50 rounded-2xl transition-transform hover:-translate-y-1 hover:shadow-lg overflow-hidden">
