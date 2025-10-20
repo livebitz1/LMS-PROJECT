@@ -111,6 +111,34 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Ensure any anchor using the `no-underline` utility never shows an underline
+   (covers hover, focus, active states and overrides the global a:hover). */
+a.no-underline,
+a.no-underline:hover,
+a.no-underline:focus,
+a.no-underline:active {
+  text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+  text-underline-offset: 0 !important;
+}
+
+/* Remove underline for all links inside the header/navbar (desktop + mobile) */
+header a,
+header a:hover,
+header a:focus,
+header a:active {
+  text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+  text-underline-offset: 0 !important;
+}
+
+/* Also ensure nav anchors used as inline groups never get underlined */
+nav a,
+nav a:hover,
+nav a:focus {
+  text-decoration: none !important;
+}
+
 /* Focus-visible for accessibility with doodly outline */
 :focus-visible {
   outline: 3px dashed rgba(0,0,0,0.08);

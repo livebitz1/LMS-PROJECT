@@ -2,6 +2,7 @@ import React from 'react'
 import { prisma } from '../../../lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import TeacherProfileClient from './TeacherProfileClient'
 
 export default async function TeacherProfilePage({ params }: { params: { userId: string } }) {
   const { userId } = params;
@@ -50,43 +51,31 @@ export default async function TeacherProfilePage({ params }: { params: { userId:
 
   if (!profile) return notFound();
 
-  const name = profile.user.name || `${profile.user.firstName || ''} ${profile.user.lastName || ''}`.trim() || profile.user.email;
+  // serialize profile for client component
+  const profileSerialized = {
+    id: profile.id,
+    userId: profile.userId,
+    bio: profile.bio ?? null,
+    degree: profile.degree ?? null,
+    experienceYears: profile.experienceYears ?? null,
+    subjects: profile.subjects ?? null,
+    skills: profile.skills ?? null,
+    linkedin: profile.linkedin ?? null,
+    profileImageUrl: profile.profileImageUrl ?? null,
+    createdAt: profile.createdAt ? (typeof profile.createdAt === 'string' ? profile.createdAt : profile.createdAt.toISOString()) : null,
+    updatedAt: profile.updatedAt ? (typeof profile.updatedAt === 'string' ? profile.updatedAt : profile.updatedAt.toISOString()) : null,
+    user: {
+      id: profile.user?.id,
+      clerkId: profile.user?.clerkId,
+      email: profile.user?.email,
+      name: profile.user?.name ?? null,
+      firstName: profile.user?.firstName ?? null,
+      lastName: profile.user?.lastName ?? null,
+      profileImageUrl: profile.user?.profileImageUrl ?? null,
+    },
+  };
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-12">
-      <div className="mb-6">
-        <Link href="/mentors" className="text-sm text-emerald-600 underline">&larr; Back to Mentors</Link>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center gap-6">
-          <img src={profile.profileImageUrl || `/api/teacher/avatar/${profile.user.clerkId}`} alt={name} className="w-24 h-24 rounded-full object-cover" />
-          <div>
-            <h1 className="text-2xl font-semibold">{name}</h1>
-            <p className="text-sm text-slate-600">{profile.degree ?? ''} {profile.experienceYears ? `• ${profile.experienceYears} yrs` : ''}</p>
-            {profile.linkedin && <p className="mt-1"><a href={profile.linkedin} target="_blank" rel="noreferrer" className="text-emerald-600 underline">LinkedIn</a></p>}
-          </div>
-        </div>
-
-        {profile.bio && <p className="mt-6 text-sm text-slate-700">{profile.bio}</p>}
-
-        {Array.isArray(profile.skills) && profile.skills.length > 0 && (
-          <div className="mt-4">
-            <h3 className="text-sm font-medium mb-2">Skills</h3>
-            <div className="flex flex-wrap gap-2">
-              {profile.skills.map((s: any, i: number) => (
-                <span key={`${String(s)}-${i}`} className="inline-block bg-emerald-50 text-emerald-800 px-2 py-1 rounded-full text-xs">{typeof s === 'string' ? s : String(s)}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {Array.isArray(profile.subjects) && profile.subjects.length > 0 && (
-          <div className="mt-4 text-sm text-slate-600">Subjects: {profile.subjects.map((s:any)=> typeof s === 'string' ? s : String(s)).join(', ')}</div>
-        )}
-
-        <div className="mt-6 text-xs text-slate-400">Member since {new Date(profile.createdAt).toLocaleDateString()}</div>
-      </div>
-    </main>
+    <TeacherProfileClient profile={profileSerialized} />
   )
 }

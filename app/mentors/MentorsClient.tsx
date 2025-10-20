@@ -76,7 +76,11 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
         <div className="flex gap-2 flex-wrap">
           <div className="flex gap-2 items-center overflow-auto">
             {skillsList.slice(0,8).map((s) => (
-              <button key={s} className={`text-xs px-2 py-1 rounded-full ${skillFilter === s ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-800'}`} onClick={() => setSkillFilter(s)}>{s}</button>
+              <button
+                key={s}
+                className={`text-xs px-2 py-1 rounded-full ${skillFilter === s ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-800'}`}
+                onClick={() => setSkillFilter(s)}
+              >{s}</button>
             ))}
             {/* allow clearing by clicking the active chip again */}
             {skillFilter && (
@@ -118,7 +122,9 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
                       <CardDescription className="truncate text-sm text-slate-600">{p.degree ? `${p.degree}${p.experienceYears ? ` • ${p.experienceYears} yrs` : ''}` : (subjects.slice(0,2).join(', ') || '')}</CardDescription>
                     </div>
 
-                    {subjects[0] && <div className="text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full whitespace-nowrap border border-emerald-100">{subjects[0]}</div>}
+                    {subjects[0] && (
+                      <div className="text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full whitespace-nowrap border border-emerald-100 transform transition-transform duration-200 ease-out hover:-translate-y-1 hover:rotate-3 hover:scale-105">{subjects[0]}</div>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -129,7 +135,11 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
                 {skills.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {skills.slice(0,6).map((s:any,i:number) => (
-                      <button key={`${s}-${i}`} className="inline-block bg-white border border-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs" onClick={() => setSkillFilter(s)}>{s}</button>
+                      <button
+                        key={`${s}-${i}`}
+                        className="inline-block bg-white border border-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs transform transition-transform duration-200 ease-out hover:-translate-y-1 hover:rotate-3 hover:scale-105 hover:shadow-[0_8px_20px_rgba(6,95,70,0.06)]"
+                        onClick={() => setSkillFilter(s)}
+                      >{s}</button>
                     ))}
                     {skills.length > 6 && <span className="text-xs text-slate-400 px-2">+{skills.length - 6}</span>}
                   </div>
@@ -143,8 +153,14 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
                     <span className="text-xs text-slate-400">Joined {new Date(p.createdAt as any).toLocaleDateString()}</span>
                   </div>
 
-                  <Link href={`/teacher/${p.userId}`}>
-                    <Button variant="ghost" size="sm">View</Button>
+                  <Link href={`/teacher/${p.userId}`} aria-label={`Open ${displayName} profile`} title={`View ${displayName} profile`}>
+                    <Button variant="outline" size="sm" className="rounded-full px-3 py-1.5 flex items-center gap-2 bg-white hover:bg-emerald-50 transition">
+                      <span className="text-sm">View</span>
+                      <svg className="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                        <path d="M5 12h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </Button>
                   </Link>
                 </div>
               </CardFooter>
