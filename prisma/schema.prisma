@@ -19,6 +19,7 @@ model User {
   role           String?  // 'student' | 'teacher'
   createdAt      DateTime @default(now())
   courses        Course[]
+  teacherProfile TeacherProfile?
 }
 
 model Course {
@@ -39,4 +40,19 @@ model Lesson {
   courseId  String
   course    Course   @relation(fields: [courseId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model TeacherProfile {
+  id             String   @id @default(cuid())
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String   @unique
+  bio            String?
+  degree         String?
+  experienceYears Int?
+  subjects       Json?
+  skills         Json?
+  linkedin       String?
+  profileImageUrl String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

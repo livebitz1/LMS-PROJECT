@@ -1,12 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import AuthWithRoleButton from "./AuthWithRoleButton";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+
+  // fetch server-side user (synced by SyncUser) to determine role for conditional links
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/users', { method: 'GET', credentials: 'same-origin' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+        setRole(data?.user?.role ?? null);
+      } catch (_) {
+        // ignore
+      }
+    })();
+    return () => { mounted = false };
+  }, []);
+
   return (
     <header className="border-b border-gray-100 bg-white/60 backdrop-blur-sm relative">
       <div className="max-w-7xl mx-auto px-6 py-4 grid grid-cols-3 items-center">
@@ -43,9 +62,9 @@ export default function Navbar() {
             </li>
 
             <li>
-              <Link href="/assignments" className="relative group inline-block">
+              <Link href="/mentors" className="relative group inline-block">
                 <span className="absolute inset-0 bg-black transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">Assignments</span>
+                <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">Mentors</span>
               </Link>
             </li>
 
@@ -57,11 +76,18 @@ export default function Navbar() {
             </li>
 
             <li>
-              <Link href="/gradebook" className="relative group inline-block">
-                <span className="absolute inset-0 bg-black transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">Gradebook</span>
-              </Link>
+              {/* Gradebook link removed */}
             </li>
+
+            {/* Teacher dashboard link (visible when server role indicates teacher) */}
+            {role === 'teacher' && (
+              <li>
+                <Link href="/teacher/dashboard" className="relative group inline-block">
+                  <span className="absolute inset-0 bg-emerald-500 transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
+                  <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors whitespace-nowrap">teacher-dashboard</span>
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
 
@@ -128,9 +154,11 @@ export default function Navbar() {
             <ul className="flex flex-col gap-3">
               <li><Link href="/" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Home</Link></li>
               <li><Link href="/courses" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Courses</Link></li>
-              <li><Link href="/assignments" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Assignments</Link></li>
+              <li><Link href="/mentors" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Mentors</Link></li>
               <li><Link href="/messages" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Messaging</Link></li>
-              <li><Link href="/gradebook" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Gradebook</Link></li>
+              {role === 'teacher' && (
+                <li><Link href="/teacher/dashboard" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-500 hover:text-white whitespace-nowrap">teacher-dashboard</Link></li>
+              )}
             </ul>
           </div>
         </div>
