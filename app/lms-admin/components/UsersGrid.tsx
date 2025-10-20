@@ -163,7 +163,6 @@ export default function UsersGrid({ users }: { users: User[] }) {
             onChange={(e: any) => { setQuery(e.target.value); setPage(1); }}
             className="w-full sm:w-80"
           />
-          <Button variant="ghost" onClick={() => { setQuery(''); setPage(1); }} className="ml-2">Clear</Button>
         </div>
 
         <div className="flex items-center gap-3">
