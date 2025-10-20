@@ -9,6 +9,8 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
   const [closing, setClosing] = useState(false);
   // local flag to indicate whether the user confirmed (pressed Continue)
   const [confirmed, setConfirmed] = useState(false);
+  // track attempts to close without choosing a role to show a warning/animation
+  const [attemptedClose, setAttemptedClose] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [anchorPos, setAnchorPos] = useState<{top: number, left: number} | null>(null);
 
@@ -18,7 +20,10 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
       const anchor = document.getElementById('get-started-button');
       if (anchor) {
         const rect = anchor.getBoundingClientRect();
-        const top = rect.bottom + 12 + window.scrollY; // offset below the button
+        // offset slightly above the original position so modal feels more centered
+        const rawTop = rect.bottom + 12 + window.scrollY - 40; // shift up by 40px
+        const minTop = 36; // don't place too close to the viewport top
+        const top = Math.max(minTop, rawTop);
         const left = rect.left + rect.width / 2 + window.scrollX; // center relative to anchor
         setAnchorPos({ top, left });
       }
@@ -123,9 +128,34 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
     }, 340); // match the 300ms transition + buffer
   }, [closing, onCloseComplete]);
 
+  // helper that prevents closing unless the user has explicitly CONFIRMED
+  const attemptClose = (finalConfirmed: boolean = false) => {
+    // If the user hasn't selected a role yet, guide them to pick one
+    if (!role) {
+      setAttemptedClose(true);
+      setTimeout(() => setAttemptedClose(false), 900);
+      const firstRole = document.querySelector('[role="button"][tabindex="0"]');
+      try { (firstRole as HTMLElement | null)?.focus(); } catch (_) {}
+      return;
+    }
+
+    // If a role is selected but the user hasn't pressed Continue to CONFIRM, block closing
+    if (!confirmed) {
+      // tell user to press Continue to confirm their choice
+      setAttemptedClose(true);
+      setTimeout(() => setAttemptedClose(false), 900);
+      const continueBtn = document.querySelector('button:not([aria-label])') as HTMLElement | null;
+      try { continueBtn?.focus(); } catch (_) {}
+      return;
+    }
+
+    // User has confirmed -> proceed with normal close flow
+    closeModal(finalConfirmed);
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeModal(false);
+      if (e.key === 'Escape') attemptClose(false);
       if (e.key === 'Enter' && role) {
         // confirm selection on Enter
         confirm();
@@ -147,7 +177,7 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
   if (!show) return null;
 
   const panelStyle: React.CSSProperties | undefined = anchorPos
-    ? { position: 'absolute', top: `${anchorPos.top}px`, left: `${anchorPos.left}px`, transform: 'translateX(-50%)', zIndex: 60 }
+    ? { position: 'absolute', top: `${anchorPos.top}px`, left: `${anchorPos.left}px`, transform: 'translateX(-50%) translateY(-8px)', zIndex: 60 }
     : undefined;
 
   return (
@@ -156,6 +186,15 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
       <div
         className="absolute inset-0 bg-black/28 pointer-events-auto"
         aria-hidden
+        onClick={() => {
+          // guard: only allow backdrop to close when user confirmed; otherwise show warning
+          if (confirmed) {
+            attemptClose(false);
+          } else {
+            setAttemptedClose(true);
+            setTimeout(() => setAttemptedClose(false), 900);
+          }
+        }}
       />
 
       <div className="relative w-full h-full pointer-events-none">
@@ -186,9 +225,29 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
             <div className="flex-1">
               <h2 id="role-modal-title" className="text-lg font-bold">Who are you signing in as?</h2>
               <p id="role-modal-desc" className="mt-1 text-sm text-slate-600">Select a role to personalize the LMS experience. You must choose one to continue.</p>
+              {/* show small persistent hint when no role selected */}
+              {!role ? (
+                <div className="mt-2 text-xs text-rose-600 font-medium" aria-live="polite">Please choose a role to continue — you cannot close this dialog until you do.</div>
+              ) : !confirmed ? (
+                <div className="mt-2 text-xs text-amber-600 font-medium" aria-live="polite">Role selected — press Continue to confirm your choice.</div>
+              ) : null}
             </div>
 
-            <button onClick={() => closeModal(false)} aria-label="Close" className="ml-2 rounded-md p-2 text-slate-600 hover:bg-slate-100">
+            <button
+              onClick={() => {
+                if (!confirmed) {
+                  setAttemptedClose(true);
+                  setTimeout(() => setAttemptedClose(false), 900);
+                  return;
+                }
+                attemptClose(false);
+              }}
+              aria-label="Close"
+              className={`ml-2 rounded-md p-2 text-slate-600 ${confirmed ? 'hover:bg-slate-100' : 'opacity-60 pointer-events-none'}`} 
+              type="button"
+              disabled={!confirmed}
+              aria-disabled={!confirmed}
+            >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                 <path d="M6 6l12 12M6 18L18 6" stroke="#0F172A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -222,7 +281,22 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
           </div>
 
           <div className="mt-6 flex items-center justify-end gap-3">
-            <button onClick={() => closeModal(false)} className="px-3 py-2 rounded-md text-sm border border-slate-200">Cancel</button>
+            <button
+              onClick={() => {
+                if (!confirmed) {
+                  setAttemptedClose(true);
+                  setTimeout(() => setAttemptedClose(false), 900);
+                  return;
+                }
+                attemptClose(false);
+              }}
+              className={`px-3 py-2 rounded-md text-sm border border-slate-200 ${confirmed ? '' : 'opacity-60 pointer-events-none'}`}
+              type="button"
+              disabled={!confirmed}
+              aria-disabled={!confirmed}
+            >
+              Cancel
+            </button>
             <button
               onClick={confirm}
               disabled={!role}

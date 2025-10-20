@@ -11,12 +11,16 @@ export default function SyncUser() {
   const [hasRole, setHasRole] = useState<string | null>(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
 
-  // read pending role from localStorage on mount
+  // read pending role and any 'require role selection' flag from localStorage on mount
   useEffect(() => {
     try {
       const pending = localStorage.getItem('pending_role');
       if (pending) {
         setRoleFromStorage(pending);
+      }
+      const require = localStorage.getItem('require_role_selection');
+      if (require) {
+        setShowRoleModal(true);
       }
     } catch (_) {}
   }, []);
@@ -25,19 +29,36 @@ export default function SyncUser() {
   useEffect(() => {
     if (isSignedIn && roleFromStorage && !hasRole) {
       setHasRole(roleFromStorage);
+      // if a pending role existed, we don't need the 'require' flag anymore
+      try { localStorage.removeItem('require_role_selection'); } catch (_) {}
     }
   }, [isSignedIn, roleFromStorage, hasRole]);
 
-  // If user signs in without selecting a role first, sign them out and force role selection
+  // If user signs in without selecting a role first, check server; if server has role, use it; otherwise show role modal
   useEffect(() => {
     if (isSignedIn && !roleFromStorage && !hasRole) {
-      // user signed in but no pending role — force sign out and show modal
+      // check server if this Clerk user already has a role stored
       (async () => {
         try {
-          await clerk.signOut();
-        } catch (err) {
-          // ignore
-        }
+          const res = await fetch('/api/users', { method: 'GET', credentials: 'same-origin' });
+          if (res.ok) {
+            const data = await res.json();
+            const serverUser = data?.user;
+            if (serverUser && serverUser.role) {
+              // server already knows this user's role, populate and skip showing modal
+              setHasRole(serverUser.role);
+              // remove any persisted requirement
+              try { localStorage.removeItem('require_role_selection'); } catch (_) {}
+              return;
+            }
+          }
+        } catch (_) {}
+
+        // user signed in but no pending role and server doesn't have one — show role modal (do NOT sign out)
+        try {
+          // persist requirement so the modal will reopen after refresh
+          localStorage.setItem('require_role_selection', '1');
+        } catch (_) {}
         setShowRoleModal(true);
       })();
     }
@@ -77,6 +98,8 @@ export default function SyncUser() {
           console.log("SyncUser: user synced to database");
           // remove pending role after successful sync
           try { localStorage.removeItem('pending_role'); } catch (_) {}
+          // remove the persisted requirement as we've finished role selection
+          try { localStorage.removeItem('require_role_selection'); } catch (_) {}
           setRoleFromStorage(null);
         }
       } catch (err) {
@@ -86,10 +109,19 @@ export default function SyncUser() {
   }, [isSignedIn, user, hasRole]);
 
   const onConfirmRole = (r: 'student' | 'teacher') => {
+    // If user is already signed in, set role immediately (no need to open Clerk)
+    if (isSignedIn) {
+      setHasRole(r);
+      setShowRoleModal(false);
+      try { localStorage.removeItem('require_role_selection'); } catch (_) {}
+      return;
+    }
+
+    // If user is not signed in yet, store pending role and open Clerk sign-in
     try { localStorage.setItem('pending_role', r); } catch (_) {}
     setRoleFromStorage(r);
     setShowRoleModal(false);
-    // open Clerk sign-in so user can authenticate with the selected role pending
+    try { localStorage.removeItem('require_role_selection'); } catch (_) {}
     try {
       clerk.openSignIn();
     } catch (err) {

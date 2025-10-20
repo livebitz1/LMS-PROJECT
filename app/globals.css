@@ -160,13 +160,20 @@ body.role-modal-open .collaboration-shift,
 /* Smooth animation for the shift */
 .collaboration-shift {
   transform: translateY(0) !important;
-  transition: transform 300ms cubic-bezier(.2,.9,.2,1) !important;
+  transition: transform 320ms cubic-bezier(.2,.9,.2,1) !important;
 }
 
 /* On smaller screens default fallbacks (if JS doesn't run) */
 @media (max-width: 640px) {
-   :root.role-modal-open body .collaboration-shift,
-   .collaboration-shift.role-modal-active {
-    transform: translateY(var(--role-modal-shift, 220px)) !important;
-   }
+    :root.role-modal-open body .collaboration-shift,
+    .collaboration-shift.role-modal-active {
+     transform: translateY(var(--role-modal-shift, 240px)) !important;
+    }
+ }
+
+/* reduce default top margin for non-anchored modal so it appears higher */
+@media (min-width: 640px) {
+  .max-w-xl.mx-auto.mt-24 {
+    margin-top: 3.5rem; /* was 6rem (mt-24), now ~3.5rem */
+  }
 }
