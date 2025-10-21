@@ -319,3 +319,18 @@ body.role-modal-open .collaboration-shift,
     @apply bg-background text-foreground;
   }
 }
+
+.booked-success {
+  background-color: #059669 !important; /* emerald-700 */
+  opacity: 1 !important;
+}
+.booked-success .booked-check {
+  opacity: 1 !important;
+  transform: scale(1) !important;
+  transition: opacity 0.3s, transform 0.3s;
+}
+.booked-check {
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.3s, transform 0.3s;
+}

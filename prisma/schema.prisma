@@ -19,6 +19,8 @@ model User {
   role            String?
   courses         Course[]
   teacherProfile  TeacherProfile?
+  teacherBookingsAsTeacher TeacherBooking[] @relation("TeacherBookingsAsTeacher")
+  teacherBookingsAsStudent TeacherBooking[] @relation("TeacherBookingsAsStudent")
 }
 
 model Course {
@@ -56,4 +58,16 @@ model TeacherProfile {
   displayName     String?
   hourlyRate      Float?
   user            User     @relation(fields: [userId], references: [id])
+}
+
+model TeacherBooking {
+  id           String   @id @default(cuid())
+  teacherId    String
+  studentId    String
+  studentName  String
+  studentEmail String
+  message      String?
+  createdAt    DateTime @default(now())
+  teacher      User     @relation("TeacherBookingsAsTeacher", fields: [teacherId], references: [id])
+  student      User     @relation("TeacherBookingsAsStudent", fields: [studentId], references: [id])
 }

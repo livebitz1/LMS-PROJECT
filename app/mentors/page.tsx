@@ -1,7 +1,9 @@
 import React from 'react'
 import { prisma } from '../../lib/prisma'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import Link from "next/link";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Button } from "@/components/ui/button";
 import MentorsClient from './MentorsClient'
 import Navbar from '../components/Navbar'
 import type { Profile } from './MentorsClient';

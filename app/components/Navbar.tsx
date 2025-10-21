@@ -81,10 +81,27 @@ export default function Navbar() {
 
             {/* Teacher dashboard link (visible when server role indicates teacher) */}
             {role === 'teacher' && (
+              <>
+                <li>
+                  <Link href="/teacher/dashboard" className="relative group inline-block no-underline hover:no-underline">
+                    <span className="absolute inset-0 bg-emerald-500 transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
+                    <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors whitespace-nowrap no-underline">teacher-dashboard</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/teacher/bookings" className="relative group inline-block no-underline hover:no-underline">
+                    <span className="absolute inset-0 bg-emerald-400 transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
+                    <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors whitespace-nowrap no-underline">Bookings</span>
+                  </Link>
+                </li>
+              </>
+            )}
+            {/* Learner dashboard link (visible when server role indicates student) */}
+            {role === 'student' && (
               <li>
-                <Link href="/teacher/dashboard" className="relative group inline-block no-underline hover:no-underline">
-                  <span className="absolute inset-0 bg-emerald-500 transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                  <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors whitespace-nowrap no-underline">teacher-dashboard</span>
+                <Link href="/learner/dashboard" className="relative group inline-block no-underline hover:no-underline">
+                  <span className="absolute inset-0 bg-emerald-400 transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
+                  <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors whitespace-nowrap no-underline">learner-dashboard</span>
                 </Link>
               </li>
             )}
@@ -157,7 +174,14 @@ export default function Navbar() {
               <li><Link href="/mentors" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Mentors</Link></li>
               <li><Link href="/messages" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Messaging</Link></li>
               {role === 'teacher' && (
-                <li><Link href="/teacher/dashboard" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-500 hover:text-white whitespace-nowrap no-underline hover:no-underline">teacher-dashboard</Link></li>
+                <>
+                  <li><Link href="/teacher/dashboard" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-500 hover:text-white whitespace-nowrap no-underline hover:no-underline">teacher-dashboard</Link></li>
+                  <li><Link href="/teacher/bookings" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-400 hover:text-white whitespace-nowrap no-underline hover:no-underline">Bookings</Link></li>
+                </>
+              )}
+              {/* Learner dashboard link (visible when server role indicates student) */}
+              {role === 'student' && (
+                <li><Link href="/learner/dashboard" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-400 hover:text-white whitespace-nowrap no-underline hover:no-underline">learner-dashboard</Link></li>
               )}
             </ul>
           </div>

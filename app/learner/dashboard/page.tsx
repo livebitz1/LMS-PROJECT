@@ -1,0 +1,53 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { LearnerProfileCard } from "./LearnerProfileCard";
+import Navbar from "@/app/components/Navbar";
+
+export default function LearnerDashboard() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch("/api/users", { credentials: "same-origin" });
+      if (!res.ok) return setLoading(false);
+      const data = await res.json();
+      setUser(data?.user ?? null);
+      setLoading(false);
+      // Redirect if not student
+      if (data?.user?.role !== "student") router.replace("/");
+    })();
+  }, [router]);
+
+  if (loading) return <div className="py-20 text-center text-lg">Loading...</div>;
+  if (!user || user.role !== "student") return null;
+
+  return (
+    <>
+      <Navbar />
+      <div className="max-w-3xl mx-auto py-10 px-4">
+        <LearnerProfileCard user={user} />
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Welcome, {user.name || user.email || "Learner"}!</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-slate-700 text-base mb-2">This is your learner dashboard.</div>
+            <ul className="list-disc pl-6 text-slate-600 text-sm space-y-1">
+              <li>View and track your enrolled courses (coming soon)</li>
+              <li>See your progress and achievements (coming soon)</li>
+              <li>Message mentors and teachers</li>
+              <li>Update your profile (coming soon)</li>
+            </ul>
+          </CardContent>
+        </Card>
+        {/* Add more learner-specific widgets here */}
+      </div>
+    </>
+  );
+}

@@ -2,7 +2,7 @@ import React from 'react'
 import { getAuth } from '@clerk/nextjs/server'
 import { headers } from 'next/headers';
 import { NextRequest } from 'next/server';
-import { prisma } from '../../../lib/prisma'
+import { prisma } from '@/lib/prisma';
 import TeacherProfileEditor from './TeacherProfileEditor'
 import Navbar from '../../components/Navbar'
 import { redirect } from 'next/navigation'
@@ -39,6 +39,12 @@ export default async function TeacherDashboardPage() {
     const rows: TeacherProfile[] = await prisma.$queryRaw`SELECT id, "userId", "displayName", bio, degree, "experienceYears", "hourlyRate", subjects, skills, linkedin, "createdAt", "updatedAt" FROM "TeacherProfile" WHERE "userId" = ${user.id} LIMIT 1`;
     teacherProfile = rows?.[0] ?? null;
   }
+
+  // fetch teacher bookings for this teacher
+  const bookings = await prisma.teacherBooking.findMany({
+    where: { teacherId: user.id },
+    orderBy: { createdAt: 'desc' },
+  });
 
   const userSerialized = {
     id: user.id,
@@ -81,6 +87,25 @@ export default async function TeacherDashboardPage() {
       <main className="max-w-4xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold mb-4">Teacher Dashboard</h1>
         <p className="text-sm text-muted-foreground mb-6">Manage your professional profile — this section is only for teachers.</p>
+
+        {/* Show recent bookings */}
+        {bookings.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-2">Recent Bookings</h2>
+            <div className="space-y-4">
+              {bookings.map(b => (
+                <div key={b.id} className="border border-emerald-100 rounded-xl p-4 bg-white shadow-sm flex flex-col sm:flex-row items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-slate-900">{b.studentName}</div>
+                    <div className="text-xs text-slate-500 mb-1">{b.studentEmail}</div>
+                    {b.message && <div className="text-sm text-slate-700 mb-1">Message: {b.message}</div>}
+                    <div className="text-xs text-slate-400">Booked on {new Date(b.createdAt).toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Helpful account/display name info so teachers know their current public display name */}
         <div className="mb-6">
