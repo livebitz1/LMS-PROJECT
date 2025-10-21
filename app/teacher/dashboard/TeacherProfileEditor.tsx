@@ -24,11 +24,12 @@ type Profile = {
   id: string;
   userId: string;
   displayName?: string | null;
+  hourlyRate?: number | null;
   bio?: string | null;
   degree?: string | null;
   experienceYears?: number | null;
-  subjects?: any;
-  skills?: any;
+  subjects?: string[] | null;
+  skills?: string[] | null;
   linkedin?: string | null;
   profileImageUrl?: string | null;
   createdAt: string;
@@ -37,8 +38,6 @@ type Profile = {
 
 export default function TeacherProfileEditor({ user, profile }: { user: User; profile?: Profile | null }) {
   const router = useRouter();
-  const [firstName, setFirstName] = useState(user.firstName ?? '');
-  const [lastName, setLastName] = useState(user.lastName ?? '');
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [saving, setSaving] = useState(false);
@@ -47,6 +46,7 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
   // New fields
   const [degree, setDegree] = useState('');
   const [experienceYears, setExperienceYears] = useState<number | ''>('');
+  const [hourlyRate, setHourlyRate] = useState<number | ''>('');
   const [subjects, setSubjects] = useState(''); // comma separated
   const [linkedin, setLinkedin] = useState('');
 
@@ -58,11 +58,12 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
     setBio(profile.bio ?? '');
     setDegree(profile.degree ?? '');
     setExperienceYears(profile.experienceYears ?? '');
+    setHourlyRate(profile.hourlyRate ?? '');
     setSubjects(Array.isArray(profile.subjects) ? profile.subjects.join(', ') : profile.subjects ?? '');
     setLinkedin(profile.linkedin ?? '');
     setSkills(Array.isArray(profile.skills) ? profile.skills : profile.skills ?? []);
 
-    // Prefill displayName: prefer explicit profile.displayName, otherwise derive from user
+    // Prefill displayName: prefer explicit profile.displayName, otherwise derive from user's name
     let derived = profile.displayName ?? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
     if (!derived) derived = user.name ?? '';
     setDisplayName(derived);
@@ -84,12 +85,11 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName,
-          lastName,
           displayName,
           bio,
           degree,
           experienceYears: experienceYears === '' ? undefined : experienceYears,
+          hourlyRate: hourlyRate === '' ? undefined : hourlyRate,
           subjects: subjects.split(',').map((s) => s.trim()).filter(Boolean),
           linkedin,
           skills,
@@ -100,7 +100,7 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
         try {
           const payload = await res.json();
           details = payload?.details || JSON.stringify(payload) || details;
-        } catch (e) {
+        } catch { 
           const text = await res.text().catch(() => '');
           details = text || details;
         }
@@ -131,23 +131,21 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
           <AvatarFallback>{(user.firstName?.[0] || user.email?.[0] || 'U').toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Input value={firstName} onChange={(e: any) => setFirstName(e.target.value)} placeholder="First name" />
-            <Input value={lastName} onChange={(e: any) => setLastName(e.target.value)} placeholder="Last name" />
-            <Input value={displayName} onChange={(e: any) => setDisplayName(e.target.value)} placeholder="Public display name (shown on Mentors)" />
+          <div className="grid grid-cols-1 sm:grid-cols-1 gap-3">
+            <Input value={displayName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDisplayName(e.target.value)} placeholder="Public display name (shown on Mentors)" />
           </div>
         </div>
       </div>
 
       <div>
         <label className="block mb-2 text-sm font-medium">Professional bio</label>
-        <Textarea value={bio} onChange={(e: any) => setBio(e.target.value)} placeholder="Short bio for your public profile" />
+        <Textarea value={bio} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBio(e.target.value)} placeholder="Short bio for your public profile" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label className="block mb-2 text-sm font-medium">Degree</label>
-          <Input value={degree} onChange={(e: any) => setDegree(e.target.value)} placeholder="e.g. M.Ed, PhD" />
+          <Input value={degree} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDegree(e.target.value)} placeholder="e.g. M.Ed, PhD" />
         </div>
 
         <div>
@@ -155,26 +153,38 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
           <Input
             type="number"
             value={experienceYears}
-            onChange={(e: any) => setExperienceYears(e.target.value === '' ? '' : Number(e.target.value))}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExperienceYears(e.target.value === '' ? '' : Number(e.target.value))}
             placeholder="e.g. 5"
           />
         </div>
 
         <div>
+          <label className="block mb-2 text-sm font-medium">Hourly rate (USD/hr)</label>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={hourlyRate}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setHourlyRate(e.target.value === '' ? '' : Number(e.target.value))}
+            placeholder="e.g. 30.00"
+          />
+        </div>
+
+        <div>
           <label className="block mb-2 text-sm font-medium">LinkedIn / Contact</label>
-          <Input value={linkedin} onChange={(e: any) => setLinkedin(e.target.value)} placeholder="LinkedIn URL or phone" />
+          <Input value={linkedin} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLinkedin(e.target.value)} placeholder="LinkedIn URL or phone" />
         </div>
       </div>
 
       <div>
         <label className="block mb-2 text-sm font-medium">Subjects / Specialties</label>
-        <Input value={subjects} onChange={(e: any) => setSubjects(e.target.value)} placeholder="Comma separated (e.g. Math, Physics)" />
+        <Input value={subjects} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubjects(e.target.value)} placeholder="Comma separated (e.g. Math, Physics)" />
       </div>
 
       <div>
         <label className="block mb-2 text-sm font-medium">Skills</label>
         <div className="flex gap-2 items-center">
-          <Input value={skillInput} onChange={(e: any) => setSkillInput(e.target.value)} placeholder="Add a skill and press Enter or click Add" onKeyDown={(e:any)=>{ if(e.key=== 'Enter'){ e.preventDefault(); addSkill(); } }} />
+          <Input value={skillInput} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSkillInput(e.target.value)} placeholder="Add a skill and press Enter or click Add" onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>)=>{ if(e.key=== 'Enter'){ e.preventDefault(); addSkill(); } }} />
           <Button onClick={addSkill} size="sm">Add</Button>
         </div>
 

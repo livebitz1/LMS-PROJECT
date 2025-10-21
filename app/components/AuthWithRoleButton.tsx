@@ -9,7 +9,7 @@ export default function AuthWithRoleButton({ mode = 'signup', children, classNam
     try {
       if (mode === 'signup') clerk.openSignUp();
       else clerk.openSignIn();
-    } catch (_) {}
+    } catch {}
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

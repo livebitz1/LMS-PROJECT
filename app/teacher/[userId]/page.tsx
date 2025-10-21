@@ -1,20 +1,33 @@
 import React from 'react'
 import { prisma } from '../../../lib/prisma'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import TeacherProfileClient from './TeacherProfileClient'
+import type { TeacherProfile, User } from '@prisma/client';
 
-export default async function TeacherProfilePage({ params }: { params: { userId: string } }) {
-  const { userId } = params;
+export default async function Page({ params }: { params: Promise<{ userId: string }> }) {
+  const { userId } = await params;
 
   // Attempt to use the Prisma delegate when available; otherwise use a raw SQL fallback
-  let profile: any = null;
-  const tp = (prisma as any).teacherProfile;
+  let profile: (TeacherProfile & { user: User }) | null = null;
+  const tp = (prisma as { teacherProfile?: { findUnique?: (args: unknown) => Promise<TeacherProfile & { user: User } | null> } }).teacherProfile;
   if (tp && typeof tp.findUnique === 'function') {
     profile = await tp.findUnique({ where: { userId }, include: { user: true } });
   } else {
-    const rows: any = await prisma.$queryRaw`
-      SELECT tp.*, u.id AS "userId", u."clerkId", u.email, u.name, u."firstName", u."lastName", u."profileImageUrl" AS "userProfileImageUrl", u.role AS "userRole", u."createdAt" AS "userCreatedAt"
+    const rows: Array<TeacherProfile & { user: User } & {
+      hourlyRate: number | null;
+      displayName: string | null;
+      subjects: unknown;
+      skills: unknown;
+      user: User;
+      userId: string;
+      userProfileImageUrl: string | null;
+      clerkId: string;
+      email: string;
+      name: string | null;
+      firstName: string | null;
+      lastName: string | null;
+    }> = await prisma.$queryRaw`
+      SELECT tp.*, u.id AS "userId", u."clerkId", u.email, u.name, u."firstName", u."lastName", u."profileImageUrl" AS "userProfileImageUrl"
       FROM "TeacherProfile" tp
       JOIN "User" u ON tp."userId" = u.id
       WHERE tp."userId" = ${userId}
@@ -25,6 +38,7 @@ export default async function TeacherProfilePage({ params }: { params: { userId:
       profile = {
         id: row.id,
         userId: row.userId,
+        displayName: row.displayName ?? null,
         bio: row.bio,
         degree: row.degree,
         experienceYears: row.experienceYears,
@@ -34,6 +48,7 @@ export default async function TeacherProfilePage({ params }: { params: { userId:
         profileImageUrl: row.profileImageUrl,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
+        hourlyRate: row.hourlyRate ?? null,
         user: {
           id: row.userId,
           clerkId: row.clerkId,
@@ -41,9 +56,9 @@ export default async function TeacherProfilePage({ params }: { params: { userId:
           name: row.name,
           firstName: row.firstName,
           lastName: row.lastName,
-          profileImageUrl: row.userProfileImageUrl || row.profileImageUrl || null,
-          role: row.userRole,
-          createdAt: row.userCreatedAt,
+          profileImageUrl: row.userProfileImageUrl,
+          createdAt: row.createdAt,
+          role: null,
         },
       };
     }
@@ -55,24 +70,36 @@ export default async function TeacherProfilePage({ params }: { params: { userId:
   const profileSerialized = {
     id: profile.id,
     userId: profile.userId,
+    displayName: profile.displayName ?? null,
     bio: profile.bio ?? null,
     degree: profile.degree ?? null,
     experienceYears: profile.experienceYears ?? null,
-    subjects: profile.subjects ?? null,
-    skills: profile.skills ?? null,
+    subjects: Array.isArray(profile.subjects)
+      ? profile.subjects.filter((s: unknown): s is string => typeof s === 'string')
+      : typeof profile.subjects === 'string'
+        ? (profile.subjects as string).split(',').map((s: string) => s.trim()).filter(Boolean)
+        : [],
+    skills: Array.isArray(profile.skills)
+      ? profile.skills.filter((s: unknown): s is string => typeof s === 'string')
+      : typeof profile.skills === 'string'
+        ? (profile.skills as string).split(',').map((s: string) => s.trim()).filter(Boolean)
+        : [],
     linkedin: profile.linkedin ?? null,
     profileImageUrl: profile.profileImageUrl ?? null,
     createdAt: profile.createdAt ? (typeof profile.createdAt === 'string' ? profile.createdAt : profile.createdAt.toISOString()) : null,
     updatedAt: profile.updatedAt ? (typeof profile.updatedAt === 'string' ? profile.updatedAt : profile.updatedAt.toISOString()) : null,
-    user: {
-      id: profile.user?.id,
-      clerkId: profile.user?.clerkId,
-      email: profile.user?.email,
-      name: profile.user?.name ?? null,
-      firstName: profile.user?.firstName ?? null,
-      lastName: profile.user?.lastName ?? null,
-      profileImageUrl: profile.user?.profileImageUrl ?? null,
-    },
+    hourlyRate: profile.hourlyRate ?? null,
+    user: profile.user
+      ? {
+          id: profile.user.id,
+          clerkId: profile.user.clerkId,
+          email: profile.user.email,
+          name: profile.user.name ?? null,
+          firstName: profile.user.firstName ?? null,
+          lastName: profile.user.lastName ?? null,
+          profileImageUrl: profile.user.profileImageUrl ?? null,
+        }
+      : undefined,
   };
 
   return (

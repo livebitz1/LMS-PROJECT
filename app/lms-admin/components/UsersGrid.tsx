@@ -26,8 +26,6 @@ export default function UsersGrid({ users }: { users: User[] }) {
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState<{ key: keyof User | null; dir: 'asc' | 'desc' }>({ key: 'createdAt', dir: 'desc' });
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
-  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
   const [roleFilter, setRoleFilter] = useState<'all' | 'student' | 'teacher'>('all');
 
   const columns: { key: keyof User; label: string }[] = [
@@ -75,8 +73,8 @@ export default function UsersGrid({ users }: { users: User[] }) {
     if (sortBy.key) {
       const key = sortBy.key;
       arr.sort((a, b) => {
-        const va = (a[key] ?? '') as any;
-        const vb = (b[key] ?? '') as any;
+        const va = (a[key] ?? '') as string | number | Date;
+        const vb = (b[key] ?? '') as string | number | Date;
         if (key === 'createdAt') {
           const da = new Date(String(va)).getTime();
           const db = new Date(String(vb)).getTime();
@@ -94,8 +92,8 @@ export default function UsersGrid({ users }: { users: User[] }) {
   }, [users, query, sortBy, roleFilter]);
 
   const total = normalized.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const pageData = normalized.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.max(1, Math.ceil(total / 25));
+  const pageData = normalized.slice((page - 1) * 25, page * 25);
 
   const toggleSort = (key: keyof User) => {
     setPage(1);
@@ -151,7 +149,7 @@ export default function UsersGrid({ users }: { users: User[] }) {
     URL.revokeObjectURL(url);
   };
 
-  const selectedCount = Object.values(selectedIds).filter(Boolean).length;
+  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
 
   return (
     <div className="w-full">
@@ -160,7 +158,7 @@ export default function UsersGrid({ users }: { users: User[] }) {
           <Input
             placeholder="Search users (email, name, role...)"
             value={query}
-            onChange={(e: any) => { setQuery(e.target.value); setPage(1); }}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setQuery(e.target.value); setPage(1); }}
             className="w-full sm:w-80"
           />
         </div>
@@ -168,7 +166,7 @@ export default function UsersGrid({ users }: { users: User[] }) {
         <div className="flex items-center gap-3">
           <div className="flex items-center">
             <label className="mr-2 text-sm">Role</label>
-            <Select value={roleFilter} onValueChange={(v: string) => { setRoleFilter(v as any); setPage(1); }}>
+            <Select value={roleFilter} onValueChange={(v: 'all' | 'student' | 'teacher') => { setRoleFilter(v); setPage(1); }}>
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -275,13 +273,13 @@ export default function UsersGrid({ users }: { users: User[] }) {
       </div>
 
       <div className="mt-3 flex items-center justify-between">
-        <div className="text-sm text-slate-600">Showing {Math.min((page - 1) * pageSize + 1, total)}–{Math.min(page * pageSize, total)} of {total} users</div>
+        <div className="text-sm text-slate-600">Showing {Math.min((page - 1) * 25 + 1, total)}–{Math.min(page * 25, total)} of {total} users</div>
 
         <div className="flex items-center gap-2">
           <Button onClick={() => setPage(1)} disabled={page === 1} variant="ghost">«</Button>
           <Button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} variant="ghost">‹</Button>
           <span className="px-2">Page</span>
-          <Input value={page} onChange={(e: any) => { const v = Number(e.target.value) || 1; setPage(Math.min(Math.max(1, v), totalPages)); }} className="w-12 text-center" />
+          <Input value={page} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { const v = Number(e.target.value) || 1; setPage(Math.min(Math.max(1, v), totalPages)); }} className="w-12 text-center" />
           <span className="px-2">of {totalPages}</span>
           <Button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} variant="ghost">›</Button>
           <Button onClick={() => setPage(totalPages)} disabled={page === totalPages} variant="ghost">»</Button>

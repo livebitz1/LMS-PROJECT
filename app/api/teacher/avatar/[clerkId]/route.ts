@@ -1,10 +1,11 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '../../../../../lib/prisma';
 
-export async function GET(req: NextRequest, { params }: { params: { clerkId?: string } }) {
+// @ts-expect-error Next.js dynamic API route context must be untyped
+export async function GET(req: NextRequest, context) {
   try {
-    const clerkId = params?.clerkId;
-    if (!clerkId) return NextResponse.json({ error: 'Missing clerkId' }, { status: 400 });
+    const { params } = context as { params: { clerkId: string } };
+    const clerkId = params.clerkId;
 
     const user = await prisma.user.findUnique({ where: { clerkId } });
     if (!user || !user.profileImageUrl) {
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: { clerkId?: st
         'Cache-Control': 'public, max-age=3600',
       },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('/api/teacher/avatar error', err);
     const url = new URL('/placeholder.svg', req.url);
     return NextResponse.redirect(url);

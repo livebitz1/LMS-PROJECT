@@ -22,7 +22,7 @@ export default function SyncUser() {
       if (require) {
         setShowRoleModal(true);
       }
-    } catch (_) {}
+    } catch {}
   }, []);
 
   // If user is signed in and we already have a pending role (from before sign-in), set it as hasRole so sync runs
@@ -30,7 +30,7 @@ export default function SyncUser() {
     if (isSignedIn && roleFromStorage && !hasRole) {
       setHasRole(roleFromStorage);
       // if a pending role existed, we don't need the 'require' flag anymore
-      try { localStorage.removeItem('require_role_selection'); } catch (_) {}
+      try { localStorage.removeItem('require_role_selection'); } catch {}
     }
   }, [isSignedIn, roleFromStorage, hasRole]);
 
@@ -48,17 +48,17 @@ export default function SyncUser() {
               // server already knows this user's role, populate and skip showing modal
               setHasRole(serverUser.role);
               // remove any persisted requirement
-              try { localStorage.removeItem('require_role_selection'); } catch (_) {}
+              try { localStorage.removeItem('require_role_selection'); } catch {}
               return;
             }
           }
-        } catch (_) {}
+        } catch {}
 
         // user signed in but no pending role and server doesn't have one — show role modal (do NOT sign out)
         try {
           // persist requirement so the modal will reopen after refresh
           localStorage.setItem('require_role_selection', '1');
-        } catch (_) {}
+        } catch {}
         setShowRoleModal(true);
       })();
     }
@@ -70,10 +70,19 @@ export default function SyncUser() {
 
     (async () => {
       try {
-        const u: any = user as any;
+        const u = user as {
+          emailAddresses?: { id: string; emailAddress: string }[];
+          primaryEmailAddressId?: string;
+          firstName?: string | null;
+          lastName?: string | null;
+          fullName?: string | null;
+          username?: string | null;
+          profileImageUrl?: string | null;
+          imageUrl?: string | null;
+        };
 
         // pick primary email
-        const emailObj = (u.emailAddresses || []).find((e: any) => e.id === u.primaryEmailAddressId) || (u.emailAddresses || [])[0];
+        const emailObj = (u.emailAddresses || []).find((e) => e.id === u.primaryEmailAddressId) || (u.emailAddresses || [])[0];
 
         const payload = {
           email: emailObj?.emailAddress ?? null,
@@ -97,9 +106,9 @@ export default function SyncUser() {
         } else {
           console.log("SyncUser: user synced to database");
           // remove pending role after successful sync
-          try { localStorage.removeItem('pending_role'); } catch (_) {}
+          try { localStorage.removeItem('pending_role'); } catch {}
           // remove the persisted requirement as we've finished role selection
-          try { localStorage.removeItem('require_role_selection'); } catch (_) {}
+          try { localStorage.removeItem('require_role_selection'); } catch {}
           setRoleFromStorage(null);
         }
       } catch (err) {
@@ -113,15 +122,15 @@ export default function SyncUser() {
     if (isSignedIn) {
       setHasRole(r);
       setShowRoleModal(false);
-      try { localStorage.removeItem('require_role_selection'); } catch (_) {}
+      try { localStorage.removeItem('require_role_selection'); } catch {}
       return;
     }
 
     // If user is not signed in yet, store pending role and open Clerk sign-in
-    try { localStorage.setItem('pending_role', r); } catch (_) {}
+    try { localStorage.setItem('pending_role', r); } catch {}
     setRoleFromStorage(r);
     setShowRoleModal(false);
-    try { localStorage.removeItem('require_role_selection'); } catch (_) {}
+    try { localStorage.removeItem('require_role_selection'); } catch {}
     try {
       clerk.openSignIn();
     } catch (err) {

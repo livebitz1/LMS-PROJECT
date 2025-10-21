@@ -19,7 +19,7 @@ export default function Navbar() {
         const data = await res.json();
         if (!mounted) return;
         setRole(data?.user?.role ?? null);
-      } catch (_) {
+      } catch {
         // ignore
       }
     })();

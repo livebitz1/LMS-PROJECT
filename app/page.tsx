@@ -1,36 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import GetStartedButton from "./components/GetStartedButton";
 import Navbar from "./components/Navbar";
 
 export default function Home() {
-  const [role, setRole] = useState<"student" | "teacher">("student");
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<null | "idle" | "loading" | "success" | "error">("idle");
-
-  function validateEmail(value: string) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  }
-
-  async function handleSignup(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validateEmail(email)) {
-      setStatus("error");
-      setTimeout(() => setStatus("idle"), 2500);
-      return;
-    }
-
-    setStatus("loading");
-    // Simulate API call to create an early-access account
-    await new Promise((r) => setTimeout(r, 800));
-    setStatus("success");
-    setEmail("");
-    setTimeout(() => setStatus("idle"), 2500);
-  }
-
   const FEATURES = [
     {
       id: "courses",

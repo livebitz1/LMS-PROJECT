@@ -1,10 +1,8 @@
 "use client";
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export default function AdminNavbar({ title = 'Admin' }: { title?: string }) {
-  const router = useRouter();
 
   return (
     <header className="bg-white border-b py-3">

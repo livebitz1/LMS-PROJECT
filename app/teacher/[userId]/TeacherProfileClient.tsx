@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,13 +14,20 @@ type ProfileSerialized = {
   bio?: string | null;
   degree?: string | null;
   experienceYears?: number | null;
-  subjects?: any;
-  skills?: any;
+  subjects?: string[];
+  skills?: string[];
   linkedin?: string | null;
   profileImageUrl?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
-  user?: any;
+  user?: {
+    id: string;
+    clerkId: string;
+    email: string;
+    name?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+  };
 };
 
 export default function TeacherProfileClient({ profile }: { profile: ProfileSerialized }) {
@@ -77,8 +84,8 @@ export default function TeacherProfileClient({ profile }: { profile: ProfileSeri
               <h4 className="text-sm font-medium mb-2">Skills</h4>
               <div className="flex flex-wrap gap-2">
                 {Array.isArray(profile.skills) && profile.skills.length > 0 ? (
-                  profile.skills.map((s:any,i:number) => (
-                    <Badge key={`${String(s)}-${i}`} className="px-3 py-1">{typeof s === 'string' ? s : String(s)}</Badge>
+                  profile.skills.map((s: string, i: number) => (
+                    <Badge key={`${String(s)}-${i}`} className="px-3 py-1">{s}</Badge>
                   ))
                 ) : (
                   <div className="text-sm text-slate-500">No skills listed</div>
@@ -90,8 +97,8 @@ export default function TeacherProfileClient({ profile }: { profile: ProfileSeri
               <h4 className="text-sm font-medium mb-2">Subjects</h4>
               <div className="flex flex-wrap gap-2">
                 {Array.isArray(profile.subjects) && profile.subjects.length > 0 ? (
-                  profile.subjects.map((s:any,i:number) => (
-                    <Badge key={`sub-${i}`} className="px-3 py-1 variant-subject">{typeof s === 'string' ? s : String(s)}</Badge>
+                  profile.subjects.map((s: string, i: number) => (
+                    <Badge key={`sub-${i}`} className="px-3 py-1 variant-subject">{s}</Badge>
                   ))
                 ) : (
                   <div className="text-sm text-slate-500">No subjects listed</div>

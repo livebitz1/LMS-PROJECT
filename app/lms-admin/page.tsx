@@ -27,7 +27,7 @@ export default function AdminPage() {
         const j = await res.json().catch(() => null);
         setError(j?.error || 'Invalid password');
       }
-    } catch (err) {
+    } catch {
       setError('Network error');
     } finally {
       setLoading(false);

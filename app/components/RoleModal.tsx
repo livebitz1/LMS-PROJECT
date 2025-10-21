@@ -9,8 +9,6 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
   const [closing, setClosing] = useState(false);
   // local flag to indicate whether the user confirmed (pressed Continue)
   const [confirmed, setConfirmed] = useState(false);
-  // track attempts to close without choosing a role to show a warning/animation
-  const [attemptedClose, setAttemptedClose] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [anchorPos, setAnchorPos] = useState<{top: number, left: number} | null>(null);
 
@@ -27,7 +25,7 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
         const left = rect.left + rect.width / 2 + window.scrollX; // center relative to anchor
         setAnchorPos({ top, left });
       }
-    } catch (_) {
+    } catch {
       // ignore
     }
 
@@ -54,14 +52,14 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
         requestAnimationFrame(() => {
           try {
             coll.style.transition = 'transform 300ms cubic-bezier(.2,.9,.2,1)';
-          } catch (_) {}
+          } catch {}
         });
       }
 
       // also add global class for compatibility with existing selectors
       document.documentElement.classList.add('role-modal-open');
       document.body.classList.add('role-modal-open');
-    } catch (_) {}
+    } catch {}
 
     return () => {
       try {
@@ -78,7 +76,7 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
         document.documentElement.classList.remove('role-modal-open');
         document.body.classList.remove('role-modal-open');
         document.documentElement.style.removeProperty('--role-modal-shift');
-      } catch (_) {}
+      } catch {}
     };
   }, []);
 
@@ -101,10 +99,10 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
       // also remove global class so CSS rules react immediately
       document.documentElement.classList.remove('role-modal-open');
       document.body.classList.remove('role-modal-open');
-    } catch (_) {}
+    } catch {}
 
     // force a reflow so the browser registers the class change and will animate
-    try { void document.body.offsetHeight; } catch (_) {}
+    try { void document.body.offsetHeight; } catch {}
 
     // after the transform duration, clean up vars and unmount
     setTimeout(() => {
@@ -120,59 +118,58 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
 
         // remove any remaining global variable
         document.documentElement.style.removeProperty('--role-modal-shift');
-      } catch (_) {}
+      } catch {}
 
       setShow(false);
       // notify parent that the modal finished its close sequence so it may unmount
-      try { onCloseComplete && onCloseComplete(finalConfirmed); } catch (_) {}
+      if (onCloseComplete) { try { onCloseComplete(finalConfirmed); } catch {} }
     }, 340); // match the 300ms transition + buffer
   }, [closing, onCloseComplete]);
 
   // helper that prevents closing unless the user has explicitly CONFIRMED
-  const attemptClose = (finalConfirmed: boolean = false) => {
+  const attemptClose = useCallback((finalConfirmed: boolean = false) => {
     // If the user hasn't selected a role yet, guide them to pick one
     if (!role) {
-      setAttemptedClose(true);
-      setTimeout(() => setAttemptedClose(false), 900);
+      setTimeout(() => setConfirmed(false), 900);
       const firstRole = document.querySelector('[role="button"][tabindex="0"]');
-      try { (firstRole as HTMLElement | null)?.focus(); } catch (_) {}
+      try { (firstRole as HTMLElement | null)?.focus(); } catch {}
       return;
     }
 
     // If a role is selected but the user hasn't pressed Continue to CONFIRM, block closing
     if (!confirmed) {
       // tell user to press Continue to confirm their choice
-      setAttemptedClose(true);
-      setTimeout(() => setAttemptedClose(false), 900);
+      setTimeout(() => setConfirmed(false), 900);
       const continueBtn = document.querySelector('button:not([aria-label])') as HTMLElement | null;
-      try { continueBtn?.focus(); } catch (_) {}
+      try { continueBtn?.focus(); } catch {}
       return;
     }
 
     // User has confirmed -> proceed with normal close flow
     closeModal(finalConfirmed);
-  };
+  }, [role, confirmed, closeModal]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') attemptClose(false);
-      if (e.key === 'Enter' && role) {
-        // confirm selection on Enter
-        confirm();
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [role, onConfirm, closeModal]);
-
-  const confirm = () => {
+  const confirm = useCallback(() => {
     if (!role) return;
     // mark as confirmed and call parent sync handler
     setConfirmed(true);
     onConfirm(role);
     // then start the close animation and graceful unmount, telling parent we confirmed
     closeModal(true);
-  };
+  }, [role, onConfirm, closeModal]);
+
+  // Remove attemptedClose state
+  // Remove nested useEffect and keep only one useEffect for keydown
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') attemptClose(false);
+      if (e.key === 'Enter' && role) {
+        confirm();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [role, confirm, attemptClose]);
 
   if (!show) return null;
 
@@ -190,9 +187,6 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
           // guard: only allow backdrop to close when user confirmed; otherwise show warning
           if (confirmed) {
             attemptClose(false);
-          } else {
-            setAttemptedClose(true);
-            setTimeout(() => setAttemptedClose(false), 900);
           }
         }}
       />
@@ -236,8 +230,6 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
             <button
               onClick={() => {
                 if (!confirmed) {
-                  setAttemptedClose(true);
-                  setTimeout(() => setAttemptedClose(false), 900);
                   return;
                 }
                 attemptClose(false);
@@ -276,7 +268,7 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
               aria-pressed={role === 'teacher'}
             >
               <div className="text-sm font-semibold">Teacher</div>
-              <div className="text-xs text-slate-600 mt-2">Create courses, grade work, and manage your students' learning.</div>
+              <div className="text-xs text-slate-600 mt-2">Create courses, grade work, and manage your students&apos; learning.</div>
             </div>
           </div>
 
@@ -284,8 +276,6 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
             <button
               onClick={() => {
                 if (!confirmed) {
-                  setAttemptedClose(true);
-                  setTimeout(() => setAttemptedClose(false), 900);
                   return;
                 }
                 attemptClose(false);

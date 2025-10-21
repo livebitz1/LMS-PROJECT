@@ -23,17 +23,17 @@ const Button = () => {
             </svg>
           </div>
           <p>
-            <span style={{ ['--i' as any]: '0' }}>G</span>
-            <span style={{ ['--i' as any]: '1' }}>e</span>
-            <span style={{ ['--i' as any]: '2' }}>t</span>
-            <span style={{ ['--i' as any]: '2' }}>&nbsp;</span>
-            <span style={{ ['--i' as any]: '4' }}>S</span>
-            <span style={{ ['--i' as any]: '5' }}>t</span>
-            <span style={{ ['--i' as any]: '6' }}>a</span>
-            <span style={{ ['--i' as any]: '7' }}>r</span>
-            <span style={{ ['--i' as any]: '8' }}>t</span>
-            <span style={{ ['--i' as any]: '9' }}>e</span>
-            <span style={{ ['--i' as any]: '10' }}>d</span>
+            <span style={{ ...({ '--i': '0' } as React.CSSProperties) }}>G</span>
+            <span style={{ ...({ '--i': '1' } as React.CSSProperties) }}>e</span>
+            <span style={{ ...({ '--i': '2' } as React.CSSProperties) }}>t</span>
+            <span style={{ ...({ '--i': '2' } as React.CSSProperties) }}>&nbsp;</span>
+            <span style={{ ...({ '--i': '4' } as React.CSSProperties) }}>S</span>
+            <span style={{ ...({ '--i': '5' } as React.CSSProperties) }}>t</span>
+            <span style={{ ...({ '--i': '6' } as React.CSSProperties) }}>a</span>
+            <span style={{ ...({ '--i': '7' } as React.CSSProperties) }}>r</span>
+            <span style={{ ...({ '--i': '8' } as React.CSSProperties) }}>t</span>
+            <span style={{ ...({ '--i': '9' } as React.CSSProperties) }}>e</span>
+            <span style={{ ...({ '--i': '10' } as React.CSSProperties) }}>d</span>
           </p>
         </div>
         <div className="state state--sent">

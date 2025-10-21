@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { getAuth } from '@clerk/nextjs/server';
 import { prisma } from '../../../lib/prisma';
+import { Prisma } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,9 +12,9 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ user: null });
 
     return NextResponse.json({ user });
-  } catch (err: any) {
+  } catch (err) {
     console.error('API /api/users GET error:', err);
-    return NextResponse.json({ error: 'Server error', details: err?.message ?? String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Server error', details: (err as Error)?.message ?? String(err) }, { status: 500 });
   }
 }
 
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
 
     const safeEmail = email && String(email).trim() !== '' ? String(email) : `no-email-${userId}@no-email.local`;
 
-    const updateData: any = {
+    const updateData: Prisma.UserUpdateInput = {
       email: safeEmail,
       name: fullName ?? undefined,
       firstName: firstName ?? undefined,
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
       role: role ?? undefined,
     };
 
-    const createData: any = {
+    const createData: Prisma.UserCreateInput = {
       clerkId: userId,
       email: safeEmail,
       name: fullName ?? undefined,
@@ -60,12 +61,12 @@ export async function POST(req: NextRequest) {
         update: updateData,
         create: createData,
       });
-    } catch (dbErr: any) {
-      console.error('Prisma upsert error:', dbErr?.message ?? dbErr);
+    } catch (dbErr) {
+      console.error('Prisma upsert error:', (dbErr as Error)?.message ?? dbErr);
 
       // If the error indicates the Prisma client / database schema doesn't accept `role`
       // (e.g. Unknown argument `role`), attempt a fallback retry without the role field.
-      const msg = String(dbErr?.message ?? dbErr).toLowerCase();
+      const msg = String((dbErr as Error)?.message ?? dbErr).toLowerCase();
       if (msg.includes('unknown argument') && msg.includes('role')) {
         try {
           // remove role from payloads and retry
@@ -79,18 +80,18 @@ export async function POST(req: NextRequest) {
           });
 
           console.warn('Prisma upsert retried without `role` due to schema mismatch.');
-        } catch (retryErr: any) {
-          console.error('Prisma upsert retry (without role) failed:', retryErr?.message ?? retryErr);
-          return NextResponse.json({ error: 'Database upsert failed', details: String(retryErr?.message ?? retryErr) }, { status: 500 });
+        } catch (retryErr) {
+          console.error('Prisma upsert retry (without role) failed:', (retryErr as Error)?.message ?? retryErr);
+          return NextResponse.json({ error: 'Database upsert failed', details: String((retryErr as Error)?.message ?? retryErr) }, { status: 500 });
         }
       } else {
-        return NextResponse.json({ error: 'Database upsert failed', details: dbErr?.message ?? String(dbErr) }, { status: 500 });
+        return NextResponse.json({ error: 'Database upsert failed', details: (dbErr as Error)?.message ?? String(dbErr) }, { status: 500 });
       }
     }
 
     return NextResponse.json({ user });
-  } catch (err: any) {
+  } catch (err) {
     console.error('API /api/users error:', err);
-    return NextResponse.json({ error: 'Server error', details: err?.message ?? String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Server error', details: (err as Error)?.message ?? String(err) }, { status: 500 });
   }
 }

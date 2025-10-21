@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { getAuth } from '@clerk/nextjs/server';
 import { prisma } from '../../../../lib/prisma';
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
-    const { userId } = getAuth(req as any);
+    const { userId } = getAuth(req);
     if (!userId) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
 
     // only admin cookie check (simple shared cookie used elsewhere) — allow when cookie is present on server
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
         'Content-Disposition': 'attachment; filename="lms-users.csv"',
       },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('/lms-admin/users/export error', err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
