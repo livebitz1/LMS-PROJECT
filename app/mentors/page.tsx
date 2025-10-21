@@ -100,23 +100,18 @@ export default async function MentorsPage() {
   return (
     <>
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-gradient-to-br from-emerald-50/60 via-white to-emerald-100/40 min-h-[100vh] rounded-3xl shadow-xl">
+        <section className="mb-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight leading-snug">Mentors</h1>
-              <p className="text-sm text-slate-600 mt-1 max-w-md">Browse teacher profiles — friendly, doodly, and easy to connect with.</p>
+              <h1 className="text-4xl font-black tracking-tight leading-snug text-emerald-900 mb-2 drop-shadow-sm">Mentors</h1>
+              <p className="text-base text-slate-600 mt-1 max-w-xl">Browse teacher profiles — friendly, playful, and easy to connect with. Use the filters to find your perfect mentor.</p>
             </div>
           </div>
-
-          <div>
-            <Link href="/teacher/dashboard">
-              <Button variant="default" size="sm" className="rounded-xl shadow-[0_6px_0_rgba(6,95,70,0.12)]">✨ Claim your mentor profile</Button>
-            </Link>
-          </div>
-        </div>
-
-        <MentorsClient profiles={profiles} />
+        </section>
+        <section>
+          <MentorsClient profiles={profiles} />
+        </section>
       </main>
     </>
   )

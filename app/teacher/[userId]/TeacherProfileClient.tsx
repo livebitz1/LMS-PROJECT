@@ -20,6 +20,7 @@ type ProfileSerialized = {
   profileImageUrl?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
+  hourlyRate?: number | null;
   user?: {
     id: string;
     clerkId: string;
@@ -49,6 +50,11 @@ export default function TeacherProfileClient({ profile }: { profile: ProfileSeri
 
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">{name}</h1>
+              {typeof profile.hourlyRate === 'number' && profile.hourlyRate >= 0 && (
+                <div className="text-base font-semibold text-emerald-700 mt-1">
+                  Hourly Rate: ${profile.hourlyRate}/hr
+                </div>
+              )}
               <p className="text-sm text-slate-600 mt-1">{profile.degree ?? ''} {profile.experienceYears ? `• ${profile.experienceYears} yrs` : ''}</p>
               <div className="mt-3 flex items-center gap-3">
                 {profile.linkedin && (

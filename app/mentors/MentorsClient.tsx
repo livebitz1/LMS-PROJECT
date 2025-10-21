@@ -80,80 +80,71 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
 
   return (
     <div>
-      <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+      <div className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
         <div className="sm:col-span-2">
-          <Input value={query} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)} placeholder="Search by name, skill or niche — e.g. 'calculus', 'leadership'" />
+          <Input value={query} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)} placeholder="Search by name, skill or niche — e.g. 'calculus', 'leadership'" className="rounded-full px-5 py-2 border-emerald-200 shadow-sm focus:ring-emerald-200" />
         </div>
-
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap justify-end">
           <div className="flex gap-2 items-center overflow-auto">
             {skillsList.slice(0,8).map((s) => (
               <button
                 key={s}
-                className={`text-xs px-2 py-1 rounded-full ${skillFilter === s ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-800'}`}
+                className={`text-xs px-3 py-1 rounded-full border transition-all duration-150 ${skillFilter === s ? 'bg-emerald-700 text-white border-emerald-700 shadow' : 'bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-50'}`}
                 onClick={() => setSkillFilter(s)}
               >{s}</button>
             ))}
-            {/* allow clearing by clicking the active chip again */}
             {skillFilter && (
-              <button className="text-xs bg-white border border-emerald-100 text-emerald-800 px-2 py-1 rounded-full" onClick={() => setSkillFilter(null)}>Clear</button>
+              <button className="text-xs bg-white border border-emerald-200 text-emerald-800 px-3 py-1 rounded-full" onClick={() => setSkillFilter(null)}>Clear</button>
             )}
           </div>
         </div>
       </div>
-
-      <div className="mb-4 flex items-center gap-3 flex-wrap">
+      <div className="mb-6 flex items-center gap-3 flex-wrap">
         <div className="text-sm text-slate-600">Filter by subject:</div>
         {subjectFilter ? (
-          <Button variant="outline" size="sm" onClick={() => setSubjectFilter(null)}>Clear subject: {subjectFilter}</Button>
+          <Button variant="outline" size="sm" onClick={() => setSubjectFilter(null)} className="rounded-full border-emerald-200">Clear subject: {subjectFilter}</Button>
         ) : (
           subjectsList.slice(0,10).map((s) => (
-            <button key={s} className="text-xs bg-white border border-emerald-100 text-emerald-800 px-2 py-1 rounded-full" onClick={() => setSubjectFilter(s)}>{s}</button>
+            <button key={s} className="text-xs bg-white border border-emerald-200 text-emerald-800 px-3 py-1 rounded-full hover:bg-emerald-50 transition" onClick={() => setSubjectFilter(s)}>{s}</button>
           ))
         )}
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {filtered.map((p) => {
           const skills = Array.isArray(p.skills) ? p.skills.map((s: string)=> typeof s === 'string' ? s : String(s)) : [];
           const subjects = Array.isArray(p.subjects) ? p.subjects.map((s: string)=> typeof s === 'string' ? s : String(s)) : [];
           const displayName = p.displayName || p.user?.name || `${p.user?.firstName || ''} ${p.user?.lastName || ''}`.trim() || p.user?.email;
 
           return (
-            <Card key={p.id} className="border-2 border-dashed border-emerald-200 bg-gradient-to-br from-white to-emerald-50 rounded-2xl transition-transform hover:-translate-y-1 hover:shadow-lg overflow-hidden">
-              <CardHeader className="flex items-start gap-4">
+            <Card key={p.id} className="border border-emerald-100 shadow-lg bg-white/90 rounded-3xl transition-transform sm:hover:-translate-y-2 sm:hover:shadow-2xl overflow-hidden">
+              <CardHeader className="flex items-start gap-4 pb-2">
                 <Avatar>
                   <AvatarImage src={p.profileImageUrl || (p.user?.clerkId ? `/api/teacher/avatar/${p.user.clerkId}` : undefined)} alt={displayName} />
                   <AvatarFallback>{(displayName?.[0] || 'U').toUpperCase()}</AvatarFallback>
                 </Avatar>
-
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <CardTitle className="truncate text-slate-900">{displayName}</CardTitle>
-                      <CardDescription className="truncate text-sm text-slate-600">{p.degree ? `${p.degree}${p.experienceYears ? ` • ${p.experienceYears} yrs` : ''}` : (subjects.slice(0,2).join(', ') || '')}</CardDescription>
+                      <CardTitle className="truncate text-slate-900 text-lg font-bold">{displayName}</CardTitle>
+                      <CardDescription className="truncate text-xs text-slate-500">{p.degree ? `${p.degree}${p.experienceYears ? ` • ${p.experienceYears} yrs` : ''}` : (subjects.slice(0,2).join(', ') || '')}</CardDescription>
                     </div>
-
                     {subjects[0] && (
-                      <div className="text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full whitespace-nowrap border border-emerald-100 transform transition-transform duration-200 ease-out hover:-translate-y-1 hover:rotate-3 hover:scale-105">{subjects[0]}</div>
+                      <div className="text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 font-medium shadow-sm">{subjects[0]}</div>
                     )}
                   </div>
-
                   {typeof p.hourlyRate === 'number' && (
-                    <div className="mt-2 text-sm text-slate-700">Hourly: ${p.hourlyRate.toFixed(2)}</div>
+                    <div className="mt-1 text-xs text-emerald-700 font-semibold">Hourly: ${p.hourlyRate.toFixed(2)}</div>
                   )}
                 </div>
               </CardHeader>
-
               <CardContent>
-                {p.bio && <p className="text-sm text-slate-700 line-clamp-4">{p.bio}</p>}
-
+                {p.bio && <p className="text-xs text-slate-700 line-clamp-3 mb-2">{p.bio}</p>}
                 {skills.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-2 flex flex-wrap gap-2">
                     {skills.slice(0,6).map((s: string,i:number) => (
                       <button
                         key={`${s}-${i}`}
-                        className="inline-block bg-white border border-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs transform transition-transform duration-200 ease-out hover:-translate-y-1 hover:rotate-3 hover:scale-105 hover:shadow-[0_8px_20px_rgba(6,95,70,0.06)]"
+                        className="inline-block bg-white border border-emerald-200 text-emerald-800 px-3 py-1 rounded-full text-xs hover:bg-emerald-50 transition"
                         onClick={() => setSkillFilter(s)}
                       >{s}</button>
                     ))}
@@ -161,16 +152,14 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
                   </div>
                 )}
               </CardContent>
-
               <CardFooter>
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-4">
                     {p.linkedin && <a href={p.linkedin} target="_blank" rel="noreferrer" className="text-xs text-emerald-600 underline">LinkedIn</a>}
                     <span className="text-xs text-slate-400">Joined {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—'}</span>
                   </div>
-
                   <Link href={`/teacher/${p.userId}`} aria-label={`Open ${displayName} profile`} title={`View ${displayName} profile`}>
-                    <Button variant="outline" size="sm" className="rounded-full px-3 py-1.5 flex items-center gap-2 bg-white hover:bg-emerald-50 transition">
+                    <Button variant="outline" size="sm" className="rounded-full px-3 py-1.5 flex items-center gap-2 bg-white hover:bg-emerald-50 transition border-emerald-200">
                       <span className="text-sm">View</span>
                       <svg className="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                         <path d="M5 12h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
