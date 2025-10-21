@@ -50,10 +50,11 @@ export default async function TeacherDashboardPage() {
     teacherProfile = rows?.[0] ?? null;
   }
 
-  // fetch teacher bookings for this teacher
+  // fetch teacher bookings for this teacher (limit to 3 most recent)
   const bookings = await prisma.teacherBooking.findMany({
     where: { teacherId: user.id },
     orderBy: { createdAt: 'desc' },
+    take: 3,
   });
 
   const userSerialized = {
