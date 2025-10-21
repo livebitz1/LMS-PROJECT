@@ -23,7 +23,12 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
     include: {
       teacher: {
-        select: { name: true, profileImageUrl: true, teacherProfile: { select: { displayName: true } } }
+        select: {
+          id: true, // Ensure teacherId is available for navigation
+          name: true,
+          profileImageUrl: true,
+          teacherProfile: { select: { displayName: true } }
+        }
       }
     },
   });
