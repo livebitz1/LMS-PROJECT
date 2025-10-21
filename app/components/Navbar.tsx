@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import AuthWithRoleButton from "./AuthWithRoleButton";
+import { NavbarIcons } from "./NavbarIcons";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -50,33 +51,34 @@ export default function Navbar() {
             <li>
               <Link href="/" className="relative group inline-block">
                 <span className="absolute inset-0 bg-black transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">Home</span>
+                <span className="relative z-10 flex items-center gap-2 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">
+                  <NavbarIcons.home className="w-5 h-5" /> Home
+                </span>
               </Link>
             </li>
-
             <li>
               <Link href="/courses" className="relative group inline-block">
                 <span className="absolute inset-0 bg-black transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">Courses</span>
+                <span className="relative z-10 flex items-center gap-2 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">
+                  <NavbarIcons.courses className="w-5 h-5" /> Courses
+                </span>
               </Link>
             </li>
-
             <li>
               <Link href="/mentors" className="relative group inline-block">
                 <span className="absolute inset-0 bg-black transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">Mentors</span>
+                <span className="relative z-10 flex items-center gap-2 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">
+                  <NavbarIcons.mentors className="w-5 h-5" /> Mentors
+                </span>
               </Link>
             </li>
-
             <li>
               <Link href="/messages" className="relative group inline-block">
                 <span className="absolute inset-0 bg-black transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">Messaging</span>
+                <span className="relative z-10 flex items-center gap-2 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">
+                  <NavbarIcons.messages className="w-5 h-5" /> Messaging
+                </span>
               </Link>
-            </li>
-
-            <li>
-              {/* Gradebook link removed */}
             </li>
 
             {/* Teacher dashboard link (visible when server role indicates teacher) */}
@@ -85,13 +87,17 @@ export default function Navbar() {
                 <li>
                   <Link href="/teacher/dashboard" className="relative group inline-block no-underline hover:no-underline">
                     <span className="absolute inset-0 bg-emerald-500 transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                    <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors whitespace-nowrap no-underline">teacher-dashboard</span>
+                    <span className="relative z-10 flex items-center gap-2 px-2 py-1 text-slate-800 group-hover:text-white transition-colors whitespace-nowrap no-underline">
+                      <NavbarIcons.teacherDashboard className="w-5 h-5" /> teacher-dashboard
+                    </span>
                   </Link>
                 </li>
                 <li>
                   <Link href="/teacher/bookings" className="relative group inline-block no-underline hover:no-underline">
                     <span className="absolute inset-0 bg-emerald-400 transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                    <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors whitespace-nowrap no-underline">Bookings</span>
+                    <span className="relative z-10 flex items-center gap-2 px-2 py-1 text-slate-800 group-hover:text-white transition-colors whitespace-nowrap no-underline">
+                      <NavbarIcons.bookings className="w-5 h-5" /> Bookings
+                    </span>
                   </Link>
                 </li>
               </>
@@ -101,7 +107,9 @@ export default function Navbar() {
               <li>
                 <Link href="/learner/dashboard" className="relative group inline-block no-underline hover:no-underline">
                   <span className="absolute inset-0 bg-emerald-400 transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                  <span className="relative z-10 px-2 py-1 text-slate-800 group-hover:text-white transition-colors whitespace-nowrap no-underline">learner-dashboard</span>
+                  <span className="relative z-10 flex items-center gap-2 px-2 py-1 text-slate-800 group-hover:text-white transition-colors whitespace-nowrap no-underline">
+                    <NavbarIcons.learnerDashboard className="w-5 h-5" /> learner-dashboard
+                  </span>
                 </Link>
               </li>
             )}
@@ -169,19 +177,19 @@ export default function Navbar() {
         <div className="md:hidden bg-white shadow-lg border-t border-gray-100">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <ul className="flex flex-col gap-3">
-              <li><Link href="/" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Home</Link></li>
-              <li><Link href="/courses" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Courses</Link></li>
-              <li><Link href="/mentors" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Mentors</Link></li>
-              <li><Link href="/messages" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white">Messaging</Link></li>
+              <li><Link href="/" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white flex items-center gap-2"><NavbarIcons.home className="w-5 h-5" /> Home</Link></li>
+              <li><Link href="/courses" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white flex items-center gap-2"><NavbarIcons.courses className="w-5 h-5" /> Courses</Link></li>
+              <li><Link href="/mentors" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white flex items-center gap-2"><NavbarIcons.mentors className="w-5 h-5" /> Mentors</Link></li>
+              <li><Link href="/messages" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white flex items-center gap-2"><NavbarIcons.messages className="w-5 h-5" /> Messaging</Link></li>
               {role === 'teacher' && (
                 <>
-                  <li><Link href="/teacher/dashboard" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-500 hover:text-white whitespace-nowrap no-underline hover:no-underline">teacher-dashboard</Link></li>
-                  <li><Link href="/teacher/bookings" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-400 hover:text-white whitespace-nowrap no-underline hover:no-underline">Bookings</Link></li>
+                  <li><Link href="/teacher/dashboard" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-500 hover:text-white whitespace-nowrap no-underline hover:no-underline flex items-center gap-2"><NavbarIcons.teacherDashboard className="w-5 h-5" /> teacher-dashboard</Link></li>
+                  <li><Link href="/teacher/bookings" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-400 hover:text-white whitespace-nowrap no-underline hover:no-underline flex items-center gap-2"><NavbarIcons.bookings className="w-5 h-5" /> Bookings</Link></li>
                 </>
               )}
               {/* Learner dashboard link (visible when server role indicates student) */}
               {role === 'student' && (
-                <li><Link href="/learner/dashboard" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-400 hover:text-white whitespace-nowrap no-underline hover:no-underline">learner-dashboard</Link></li>
+                <li><Link href="/learner/dashboard" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-400 hover:text-white whitespace-nowrap no-underline hover:no-underline flex items-center gap-2"><NavbarIcons.learnerDashboard className="w-5 h-5" /> learner-dashboard</Link></li>
               )}
             </ul>
           </div>
