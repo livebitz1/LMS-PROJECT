@@ -110,26 +110,26 @@ export default function Navbar() {
 
         {/* Mobile controls: sign up/user + hamburger at top-right (absolute within header so visually top-right; menu panel remains in flow) */}
         <div className="md:hidden">
-          <div className="absolute right-4 top-4 flex items-center gap-3 z-40">
-            <div className="flex-shrink-0"> 
+          <div className="absolute right-4 top-4 flex items-center gap-0 z-40">
+            <div className="flex items-center gap-0">
               <SignedOut>
                 <AuthWithRoleButton mode="signup">
                   <span className="px-3 py-2 rounded-md bg-white text-black text-sm font-semibold shadow-sm border border-gray-200">Sign up</span>
                 </AuthWithRoleButton>
               </SignedOut>
-
               <SignedIn>
-                <UserButton appearance={{ elements: { userButtonAvatarBox: 'w-9 h-9 rounded-md' } }} />
+                <div className="flex items-center justify-center w-12 h-12">
+                  <UserButton appearance={{ elements: { userButtonAvatarBox: 'w-12 h-12 rounded-full' } }} />
+                </div>
               </SignedIn>
             </div>
-
             <button
               onClick={() => setOpen((s) => !s)}
               aria-expanded={open}
               aria-label="Open menu"
-              className="inline-flex items-center justify-center p-2 rounded-md border border-gray-200 bg-white shadow-sm"
+              className="inline-flex items-center justify-center w-12 h-12 rounded-full border border-gray-200 bg-white shadow-sm ml-2"
             >
-              <svg className={`w-6 h-6 transition-transform ${open ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className={`w-7 h-7 transition-transform ${open ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
