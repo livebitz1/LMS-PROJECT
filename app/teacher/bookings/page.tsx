@@ -14,7 +14,6 @@ type BookingWithStudent = {
   teacherId: string;
   studentId: string;
   studentName: string;
-  studentEmail: string;
   message?: string | null;
   createdAt: Date;
   student: {
@@ -62,7 +61,6 @@ export default async function TeacherBookingsPage() {
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-slate-900 text-lg">{b.studentName}</div>
-                  <div className="text-xs text-slate-500 mb-1">{b.studentEmail}</div>
                   {b.message && <div className="text-sm text-slate-700 mb-1">Message: {b.message}</div>}
                   <div className="text-xs text-slate-400">Booked on {new Date(b.createdAt).toLocaleString()}</div>
                 </div>

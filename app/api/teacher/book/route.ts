@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { teacherId, studentId, studentName, studentEmail, message } = body;
-  if (!teacherId || !studentId || !studentName || !studentEmail) {
+  const { teacherId, studentId, studentName, message } = body;
+  if (!teacherId || !studentId || !studentName) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
   try {
@@ -14,7 +14,6 @@ export async function POST(req: Request) {
         teacherId,
         studentId,
         studentName,
-        studentEmail,
         message,
       },
     });

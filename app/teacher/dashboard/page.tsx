@@ -12,6 +12,16 @@ export const metadata = {
   title: 'Teacher Dashboard',
 }
 
+// Add type for booking object
+interface TeacherBooking {
+  id: string;
+  teacherId: string;
+  studentId: string;
+  studentName: string;
+  message?: string | null;
+  createdAt: Date;
+}
+
 export default async function TeacherDashboardPage() {
   // Build a server-side NextRequest using current headers so Clerk can read auth
   const rawHeaders = await headers();
@@ -93,11 +103,11 @@ export default async function TeacherDashboardPage() {
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-2">Recent Bookings</h2>
             <div className="space-y-4">
-              {bookings.map(b => (
+              {bookings.map((b: TeacherBooking) => (
                 <div key={b.id} className="border border-emerald-100 rounded-xl p-4 bg-white shadow-sm flex flex-col sm:flex-row items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-slate-900">{b.studentName}</div>
-                    <div className="text-xs text-slate-500 mb-1">{b.studentEmail}</div>
+                    {/* Removed student email from card display */}
                     {b.message && <div className="text-sm text-slate-700 mb-1">Message: {b.message}</div>}
                     <div className="text-xs text-slate-400">Booked on {new Date(b.createdAt).toLocaleString()}</div>
                   </div>

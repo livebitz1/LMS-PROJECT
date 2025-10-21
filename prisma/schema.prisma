@@ -65,7 +65,6 @@ model TeacherBooking {
   teacherId    String
   studentId    String
   studentName  String
-  studentEmail String
   message      String?
   createdAt    DateTime @default(now())
   teacher      User     @relation("TeacherBookingsAsTeacher", fields: [teacherId], references: [id])
