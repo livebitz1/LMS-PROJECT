@@ -55,6 +55,7 @@ export default async function TeacherDashboardPage() {
     where: { teacherId: user.id },
     orderBy: { createdAt: 'desc' },
     take: 3,
+    include: { student: { select: { profileImageUrl: true, name: true } } },
   });
 
   const userSerialized = {
@@ -104,8 +105,15 @@ export default async function TeacherDashboardPage() {
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-2">Recent Bookings</h2>
             <div className="space-y-4">
-              {bookings.map((b: TeacherBooking) => (
+              {bookings.map((b: any) => (
                 <div key={b.id} className="border border-emerald-100 rounded-xl p-4 bg-white shadow-sm flex flex-col sm:flex-row items-center gap-4">
+                  <div className="flex-shrink-0">
+                    <img
+                      src={b.student?.profileImageUrl || '/default-avatar.png'}
+                      alt={b.student?.name || 'Student'}
+                      className="w-12 h-12 rounded-full object-cover border border-emerald-200 shadow-sm"
+                    />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-slate-900">{b.studentName}</div>
                     {/* Removed student email from card display */}
