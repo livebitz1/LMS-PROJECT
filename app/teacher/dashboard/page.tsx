@@ -7,19 +7,10 @@ import TeacherProfileEditor from './TeacherProfileEditor'
 import Navbar from '../../components/Navbar'
 import { redirect } from 'next/navigation'
 import type { TeacherProfile } from '@prisma/client';
+import Image from 'next/image';
 
 export const metadata = {
   title: 'Teacher Dashboard',
-}
-
-// Add type for booking object
-interface TeacherBooking {
-  id: string;
-  teacherId: string;
-  studentId: string;
-  studentName: string;
-  message?: string | null;
-  createdAt: Date;
 }
 
 export default async function TeacherDashboardPage() {
@@ -51,7 +42,13 @@ export default async function TeacherDashboardPage() {
   }
 
   // fetch teacher bookings for this teacher (limit to 3 most recent)
-  const bookings = await prisma.teacherBooking.findMany({
+  const bookings: Array<{
+    id: string;
+    studentName: string;
+    message?: string | null;
+    createdAt: Date;
+    student?: { profileImageUrl?: string | null; name?: string | null };
+  }> = await prisma.teacherBooking.findMany({
     where: { teacherId: user.id },
     orderBy: { createdAt: 'desc' },
     take: 3,
@@ -105,12 +102,15 @@ export default async function TeacherDashboardPage() {
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-2">Recent Bookings</h2>
             <div className="space-y-4">
-              {bookings.map((b: any) => (
+              {bookings.map((b) => (
                 <div key={b.id} className="border border-emerald-100 rounded-xl p-4 bg-white shadow-sm flex flex-col sm:flex-row items-center gap-4">
                   <div className="flex-shrink-0">
-                    <img
+                    {/* Use next/image for optimized images */}
+                    <Image
                       src={b.student?.profileImageUrl || '/default-avatar.png'}
                       alt={b.student?.name || 'Student'}
+                      width={48}
+                      height={48}
                       className="w-12 h-12 rounded-full object-cover border border-emerald-200 shadow-sm"
                     />
                   </div>
