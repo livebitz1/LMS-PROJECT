@@ -3,7 +3,6 @@ import { headers } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import Navbar from '@/app/components/Navbar';
-import Link from 'next/link';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export const metadata = {
@@ -38,6 +37,7 @@ export default async function TeacherBookingsPage() {
     return <div className="py-20 text-center text-lg">Only teachers can view bookings.</div>;
   }
 
+  // Use the correct Prisma client property: teacherBooking
   const bookings: BookingWithStudent[] = await prisma.teacherBooking.findMany({
     where: { teacherId: user.id },
     orderBy: { createdAt: 'desc' },
