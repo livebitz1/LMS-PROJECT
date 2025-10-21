@@ -1,12 +1,51 @@
 "use client";
 
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import styled from 'styled-components';
+import { useUser, useClerk } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
-const Button = () => {
+const GetStartedButton = () => {
+  const { isSignedIn } = useUser();
+  const clerk = useClerk();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = useCallback(async () => {
+    if (!isSignedIn) {
+      clerk.openSignIn();
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/users', { credentials: 'same-origin' });
+      if (!res.ok) throw new Error('Failed to fetch user');
+      const data = await res.json();
+      const role = data?.user?.role;
+      if (role === 'student') {
+        router.push('/mentors');
+      } else if (role === 'teacher') {
+        router.push('/teacher/dashboard');
+      } else {
+        // fallback: go home
+        router.push('/');
+      }
+    } catch {
+      router.push('/');
+    } finally {
+      setLoading(false);
+    }
+  }, [isSignedIn, clerk, router]);
+
   return (
     <StyledWrapper>
-      <button id="get-started-button" aria-haspopup="dialog" className="button">
+      <button
+        id="get-started-button"
+        aria-haspopup="dialog"
+        className="button"
+        onClick={handleClick}
+        disabled={loading}
+      >
         <div className="outline" />
         <div className="state state--default">
           <div className="icon">
@@ -360,4 +399,4 @@ const StyledWrapper = styled.div`
     }
   }`;
 
-export default Button;
+export default GetStartedButton;
