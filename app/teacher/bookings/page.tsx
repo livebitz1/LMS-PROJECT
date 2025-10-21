@@ -4,6 +4,11 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import Navbar from '@/app/components/Navbar';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Empty } from '@/components/ui/empty';
 
 export const metadata = {
   title: 'Teacher Bookings',
@@ -47,25 +52,37 @@ export default async function TeacherBookingsPage() {
     <>
       <Navbar />
       <main className="max-w-3xl mx-auto px-6 py-12">
-        <h1 className="text-2xl font-bold mb-4">Your Bookings</h1>
-        <p className="text-sm text-muted-foreground mb-6">Manage and review all student bookings here.</p>
+        <h1 className="text-3xl font-extrabold mb-6 text-emerald-700 flex items-center gap-2">
+          <span className="inline-block">Your Bookings</span>
+          <Badge variant="outline" className="text-xs px-2 py-1">{bookings.length}</Badge>
+        </h1>
+        <Separator className="mb-8" />
+        <p className="text-base text-muted-foreground mb-8">Manage and review all student bookings here. Click a card for more details.</p>
         {bookings.length === 0 ? (
-          <div className="text-center text-slate-500 py-12">No bookings yet.</div>
+          <Empty className="py-16 text-center text-lg text-slate-400">No bookings yet.</Empty>
         ) : (
-          <div className="space-y-6">
+          <div className="grid gap-8">
             {bookings.map((b: BookingWithStudent) => (
-              <div key={b.id} className="border border-emerald-100 rounded-xl p-5 bg-white shadow-sm flex flex-col sm:flex-row items-center gap-4">
-                <Avatar className="size-14 mr-4">
-                  <AvatarImage src={b.student.profileImageUrl || undefined} alt={b.studentName || 'Student'} />
-                  <AvatarFallback>{b.studentName ? b.studentName[0] : '?'}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-slate-900 text-lg">{b.studentName}</div>
-                  {b.message && <div className="text-sm text-slate-700 mb-1">Message: {b.message}</div>}
+              <Card key={b.id} className="transition-shadow hover:shadow-lg border-emerald-200 bg-gradient-to-br from-white via-emerald-50 to-white">
+                <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                  <Avatar className="size-16">
+                    <AvatarImage src={b.student.profileImageUrl || undefined} alt={b.studentName || 'Student'} />
+                    <AvatarFallback>{b.studentName ? b.studentName[0] : '?'}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-bold text-lg text-emerald-900">{b.studentName}</div>
+                    <Badge variant="outline" className="text-xs">Student</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 pb-2">
+                  {b.message && <div className="text-base text-slate-700 mb-2">Message: <span className="font-medium text-emerald-700">{b.message}</span></div>}
                   <div className="text-xs text-slate-400">Booked on {new Date(b.createdAt).toLocaleString()}</div>
-                </div>
-                {/* Add management actions here if needed */}
-              </div>
+                </CardContent>
+                <CardFooter className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" size="sm">View Details</Button>
+                  {/* Future: Accept/Reject/Message actions */}
+                </CardFooter>
+              </Card>
             ))}
           </div>
         )}

@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { LearnerProfileCard } from "./LearnerProfileCard";
+import { LearnerBookings } from "./LearnerBookings";
 import Navbar from "@/app/components/Navbar";
 
 export default function LearnerDashboard() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -18,6 +20,12 @@ export default function LearnerDashboard() {
       if (!res.ok) return setLoading(false);
       const data = await res.json();
       setUser(data?.user ?? null);
+      // Fetch learner bookings
+      const bookingsRes = await fetch("/api/learner/bookings", { credentials: "same-origin" });
+      if (bookingsRes.ok) {
+        const bookingsData = await bookingsRes.json();
+        setBookings(bookingsData.bookings ?? []);
+      }
       setLoading(false);
       // Redirect if not student
       if (data?.user?.role !== "student") router.replace("/");
@@ -32,6 +40,7 @@ export default function LearnerDashboard() {
       <Navbar />
       <div className="max-w-3xl mx-auto py-10 px-4">
         <LearnerProfileCard user={user} />
+        <LearnerBookings bookings={bookings} />
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Welcome, {user.name || user.email || "Learner"}!</CardTitle>
