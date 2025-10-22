@@ -62,11 +62,11 @@ export default function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {FEATURES.map((f) => (
-              <Link
+              <div
                 key={f.id}
-                href={f.href}
-                className="group block relative rounded-2xl p-6 bg-white border border-transparent hover:border-gray-100 shadow-sm hover:shadow-lg transition-transform transform hover:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                className="group block relative rounded-2xl p-6 bg-white border border-transparent hover:border-gray-100 shadow-sm hover:shadow-lg transition-transform transform hover:-translate-y-2 focus:outline-none"
                 aria-labelledby={`feature-${f.id}-title`}
+                // Non-interactive card: clicking does nothing as requested
               >
                 <div className="h-full flex flex-col justify-between">
                   <div>
@@ -91,7 +91,7 @@ export default function Home() {
                 </div>
                 {/* Decorative focus ring element for better contrast on keyboard navigation */}
                 <span className="absolute -inset-px rounded-2xl pointer-events-none" aria-hidden />
-              </Link>
+              </div>
             ))}
           </div>
 
