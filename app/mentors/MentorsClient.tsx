@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { Heart } from 'lucide-react';
 
 export type Profile = {
   id: string;
@@ -44,6 +45,8 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
   const [bookingLoading, setBookingLoading] = useState<string | null>(null); // teacherId being booked
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userInfo, setUserInfo] = useState<any>(null);
+  const [favoritesMap, setFavoritesMap] = useState<Record<string, boolean>>({});
+  const [favLoadingId, setFavLoadingId] = useState<string | null>(null);
   const bookingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -54,6 +57,19 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
         const data = await res.json();
         setUserRole(data?.user?.role ?? null);
         setUserInfo(data?.user ?? null);
+      } catch {}
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const favRes = await fetch('/api/favorites', { credentials: 'same-origin' });
+        if (!favRes.ok) return;
+        const favData = await favRes.json();
+        const map: Record<string, boolean> = {};
+        (favData.favorites || []).forEach((f: { teacherId: string }) => { map[f.teacherId] = true; });
+        setFavoritesMap(map);
       } catch {}
     })();
   }, []);
@@ -153,8 +169,8 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
           const displayName = p.displayName || p.user?.name || `${p.user?.firstName || ''} ${p.user?.lastName || ''}`.trim() || p.user?.email;
 
           return (
-            <Card key={p.id} className="border border-emerald-100 shadow-lg bg-white/90 rounded-3xl transition-transform sm:hover:-translate-y-2 sm:hover:shadow-2xl overflow-hidden">
-              <CardHeader className="flex items-start gap-4 pb-2">
+            <Card key={p.id} className="relative border border-emerald-100 shadow-lg bg-white/90 rounded-3xl transition-transform sm:hover:-translate-y-2 sm:hover:shadow-2xl overflow-hidden">
+              <CardHeader className="relative flex items-start gap-4 pb-2">
                 <Avatar>
                   <AvatarImage src={p.profileImageUrl || (p.user?.clerkId ? `/api/teacher/avatar/${p.user.clerkId}` : undefined)} alt={displayName} />
                   <AvatarFallback>{(displayName?.[0] || 'U').toUpperCase()}</AvatarFallback>
@@ -173,7 +189,57 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
                     <div className="mt-1 text-xs text-emerald-700 font-semibold">Hourly: ${p.hourlyRate.toFixed(2)}</div>
                   )}
                 </div>
+
+                {/* Favorite overlay button (top-right inside CardHeader) - visible to students only */}
+                {userRole === 'student' && (
+                  <button
+                    aria-label={favoritesMap[p.userId] ? 'Remove favorite' : 'Add to favorites'}
+                    title={favoritesMap[p.userId] ? 'Remove favorite' : 'Add to favorites'}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (!userInfo) return;
+                      setFavLoadingId(p.userId);
+                      try {
+                        if (favoritesMap[p.userId]) {
+                          const res = await fetch(`/api/favorites?teacherId=${encodeURIComponent(p.userId)}`, { method: 'DELETE', credentials: 'same-origin' });
+                          if (res.ok) {
+                            setFavoritesMap((m) => { const nm = { ...m }; delete nm[p.userId]; return nm; });
+                          }
+                        } else {
+                          const res = await fetch('/api/favorites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ teacherId: p.userId }) });
+                          if (res.ok) {
+                            setFavoritesMap((m) => ({ ...m, [p.userId]: true }));
+                          }
+                        }
+                      } catch (err) {
+                        console.error('Favorite toggle error', err);
+                      } finally {
+                        setFavLoadingId(null);
+                      }
+                    }}
+                    className={`absolute -top-3 right-3 inline-flex items-center justify-center w-10 h-10 rounded-full transition-transform focus:outline-none ${favoritesMap[p.userId] ? 'bg-white border border-emerald-100 shadow-sm' : 'bg-white text-emerald-700 border-emerald-100 hover:shadow-sm'} ${favLoadingId === p.userId ? 'pointer-events-none opacity-80' : ''}`}
+                    style={{ zIndex: 20 }}
+                    disabled={favLoadingId === p.userId}
+                    aria-busy={favLoadingId === p.userId}
+                  >
+                    {/* Show sleek spinner while saving, otherwise heart icon (filled green when favorited) */}
+                    {favLoadingId === p.userId ? (
+                      <svg className="animate-spin w-5 h-5 text-emerald-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                      </svg>
+                    ) : (
+                      favoritesMap[p.userId] ? (
+                        <Heart className="w-5 h-5 text-emerald-600" fill="currentColor" />
+                      ) : (
+                        <Heart className="w-5 h-5 text-slate-700" fill="none" />
+                      )
+                    )}
+                  </button>
+                )}
               </CardHeader>
+
               <CardContent>
                 {p.bio && <p className="text-xs text-slate-700 line-clamp-3 mb-2">{p.bio}</p>}
                 {skills.length > 0 && (

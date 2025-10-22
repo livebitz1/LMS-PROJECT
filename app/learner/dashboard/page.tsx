@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { LearnerProfileCard } from "./LearnerProfileCard";
 import { LearnerBookings } from "./LearnerBookings";
 import Navbar from "@/app/components/Navbar";
+import LearnerFavorites from "./LearnerFavorites";
 
 export default function LearnerDashboard() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,6 +42,7 @@ export default function LearnerDashboard() {
       <div className="max-w-3xl mx-auto py-10 px-4">
         <LearnerProfileCard user={user} />
         <LearnerBookings bookings={bookings} />
+        <LearnerFavorites user={user} />
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Welcome, {user.name || user.email || "Learner"}!</CardTitle>
