@@ -125,7 +125,7 @@ export default function LearnerFavorites({ user }: { user: UserShape }) {
         )}
       </CardContent>
       <CardFooter>
-        <div className="text-xs text-slate-500">Favorites are saved to your account and sync across devices.</div>
+        <div className="text-xs text-slate-500">Your favorite teachers are saved to your account</div>
       </CardFooter>
     </Card>
   );
