@@ -4,14 +4,23 @@ import { notFound } from 'next/navigation'
 import TeacherProfileClient from './TeacherProfileClient'
 import type { TeacherProfile, User } from '@prisma/client';
 
+// Flexible server-side profile type to accommodate the new `contact` field and raw-SQL rows
+type ServerProfile = Partial<TeacherProfile> & {
+  id: string;
+  userId: string;
+  user: User;
+  contact?: string | null;
+};
+
 export default async function Page({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = await params;
 
   // Attempt to use the Prisma delegate when available; otherwise use a raw SQL fallback
-  let profile: (TeacherProfile & { user: User }) | null = null;
+  let profile: ServerProfile | null = null;
   const tp = (prisma as { teacherProfile?: { findUnique?: (args: unknown) => Promise<TeacherProfile & { user: User } | null> } }).teacherProfile;
   if (tp && typeof tp.findUnique === 'function') {
-    profile = await tp.findUnique({ where: { userId }, include: { user: true } });
+    // cast to ServerProfile to allow optional contact
+    profile = (await tp.findUnique({ where: { userId }, include: { user: true } })) as unknown as ServerProfile;
   } else {
     const rows: Array<TeacherProfile & { user: User } & {
       hourlyRate: number | null;
@@ -26,6 +35,7 @@ export default async function Page({ params }: { params: Promise<{ userId: strin
       name: string | null;
       firstName: string | null;
       lastName: string | null;
+      contact: string | null;
     }> = await prisma.$queryRaw`
       SELECT tp.*, u.id AS "userId", u."clerkId", u.email, u.name, u."firstName", u."lastName", u."profileImageUrl" AS "userProfileImageUrl"
       FROM "TeacherProfile" tp
@@ -41,6 +51,7 @@ export default async function Page({ params }: { params: Promise<{ userId: strin
         displayName: row.displayName ?? null,
         bio: row.bio,
         degree: row.degree,
+        contact: row.contact ?? null,
         experienceYears: row.experienceYears,
         subjects: row.subjects,
         skills: row.skills,
@@ -89,6 +100,7 @@ export default async function Page({ params }: { params: Promise<{ userId: strin
     createdAt: profile.createdAt ? (typeof profile.createdAt === 'string' ? profile.createdAt : profile.createdAt.toISOString()) : null,
     updatedAt: profile.updatedAt ? (typeof profile.updatedAt === 'string' ? profile.updatedAt : profile.updatedAt.toISOString()) : null,
     hourlyRate: profile.hourlyRate ?? null,
+    contact: profile.contact ?? null,
     user: profile.user
       ? {
           id: profile.user.id,

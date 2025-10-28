@@ -31,6 +31,7 @@ type Profile = {
   subjects?: string[] | null;
   skills?: string[] | null;
   linkedin?: string | null;
+  contact?: string | null;
   profileImageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -47,7 +48,32 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
   const [degree, setDegree] = useState('');
   const [experienceYears, setExperienceYears] = useState<number | ''>('');
   const [hourlyRate, setHourlyRate] = useState<number | ''>('');
-  const [subjects, setSubjects] = useState(''); // comma separated
+  // Subjects are limited to a predefined list — teacher can only choose from these
+  const ALLOWED_SUBJECTS = [
+    'MATHS - JEE MAINS & ADVANCED',
+    'PHYSICS - JEE MAINS & ADVANCED',
+    'CHEMISTRY - JEE MAINS & ADVANCED',
+    'PHYSICS - NEET',
+    'CHEMISTRY - NEET',
+    'BIOLOGY - NEET',
+    'PHYSICS - (11 AND 12)',
+    'CHEMISTRY - (11 AND 12)',
+    'BIOLOGY - (11 AND 12)',
+    'MATHS - (11 AND 12)',
+    'SCIENCE - 8th',
+    'MATHS - 8th',
+    'PHYSICS - 9th',
+    'CHEMISTRY - 9th',
+    'BIOLOGY - 9th',
+    'MATHS - 9th',
+    'PHYSICS - 10th',
+    'CHEMISTRY - 10th',
+    'BIOLOGY - 10th',
+    'MATHS - 10th',
+  ] as const;
+
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [contact, setContact] = useState('');
   const [linkedin, setLinkedin] = useState('');
 
   const [skillInput, setSkillInput] = useState('');
@@ -59,8 +85,10 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
     setDegree(profile.degree ?? '');
     setExperienceYears(profile.experienceYears ?? '');
     setHourlyRate(profile.hourlyRate ?? '');
-    setSubjects(Array.isArray(profile.subjects) ? profile.subjects.join(', ') : profile.subjects ?? '');
+    setSubjects(Array.isArray(profile.subjects) ? profile.subjects : profile.subjects ?? []);
     setLinkedin(profile.linkedin ?? '');
+    // contact field prefills from profile.contact if available
+    setContact(profile.contact ?? '');
     setSkills(Array.isArray(profile.skills) ? profile.skills : profile.skills ?? []);
 
     // Prefill displayName: prefer explicit profile.displayName, otherwise derive from user's name
@@ -90,7 +118,9 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
           degree,
           experienceYears: experienceYears === '' ? undefined : experienceYears,
           hourlyRate: hourlyRate === '' ? undefined : hourlyRate,
-          subjects: subjects.split(',').map((s) => s.trim()).filter(Boolean),
+          // subjects is a controlled array of allowed values
+          subjects: subjects,
+          contact,
           linkedin,
           skills,
         }),
@@ -169,16 +199,44 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
             placeholder="e.g. 30.00"
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block mb-2 text-sm font-medium">Contact (required)</label>
+          <Input value={contact} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setContact(e.target.value)} placeholder="Phone number (required)" />
+          <p className="text-xs text-slate-500 mt-1">Provide a contact number so students can reach you. This is required.</p>
+        </div>
 
         <div>
-          <label className="block mb-2 text-sm font-medium">LinkedIn / Contact</label>
-          <Input value={linkedin} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLinkedin(e.target.value)} placeholder="LinkedIn URL or phone" />
+          <label className="block mb-2 text-sm font-medium">LinkedIn (optional)</label>
+          <Input value={linkedin} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLinkedin(e.target.value)} placeholder="LinkedIn URL (optional)" />
+          <p className="text-xs text-slate-500 mt-1">Optional — add your LinkedIn profile for students to view your professional background.</p>
         </div>
       </div>
 
       <div>
         <label className="block mb-2 text-sm font-medium">Subjects / Specialties</label>
-        <Input value={subjects} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubjects(e.target.value)} placeholder="Comma separated (e.g. Math, Physics)" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {ALLOWED_SUBJECTS.map((s) => {
+            const selected = subjects.includes(s);
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => {
+                  setSubjects((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+                }}
+                className={`text-sm text-left px-3 py-2 rounded-lg border ${selected ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-800 border-emerald-100'} transition`}
+                aria-pressed={selected}
+                title={selected ? 'Click to remove' : 'Click to add'}
+              >
+                {s}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-xs text-slate-500">Choose one or more from the list. Adding custom specializations is not allowed.</p>
       </div>
 
       <div>

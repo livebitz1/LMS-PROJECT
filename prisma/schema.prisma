@@ -54,6 +54,7 @@ model TeacherProfile {
   subjects        Json?
   skills          Json?
   linkedin        String?
+  contact         String?
   profileImageUrl String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
