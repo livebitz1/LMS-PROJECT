@@ -52,7 +52,6 @@ model TeacherProfile {
   degree          String?
   experienceYears Int?
   subjects        Json?
-  skills          Json?
   linkedin        String?
   contact         String?
   profileImageUrl String?

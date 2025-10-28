@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -73,11 +73,12 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
   ] as const;
 
   const [subjects, setSubjects] = useState<string[]>([]);
+  const [subjectError, setSubjectError] = useState<string | null>(null);
+  const subjectsRef = useRef<HTMLDivElement | null>(null);
   const [contact, setContact] = useState('');
+  const [contactError, setContactError] = useState<string | null>(null);
+  const contactRef = useRef<HTMLInputElement | null>(null);
   const [linkedin, setLinkedin] = useState('');
-
-  const [skillInput, setSkillInput] = useState('');
-  const [skills, setSkills] = useState<string[]>([]);
 
   useEffect(() => {
     if (!profile) return;
@@ -89,7 +90,6 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
     setLinkedin(profile.linkedin ?? '');
     // contact field prefills from profile.contact if available
     setContact(profile.contact ?? '');
-    setSkills(Array.isArray(profile.skills) ? profile.skills : profile.skills ?? []);
 
     // Prefill displayName: prefer explicit profile.displayName, otherwise derive from user's name
     let derived = profile.displayName ?? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
@@ -97,16 +97,41 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
     setDisplayName(derived);
   }, [profile, user.firstName, user.lastName, user.name]);
 
-  const addSkill = () => {
-    const s = skillInput.trim();
-    if (!s) return;
-    if (!skills.includes(s)) setSkills((p) => [...p, s]);
-    setSkillInput('');
-  };
-
-  const removeSkill = (s: string) => setSkills((p) => p.filter((k) => k !== s));
-
   const handleSave = async () => {
+    // Subjects must have at least one selected
+    if (!Array.isArray(subjects) || subjects.length === 0) {
+      setSubjectError('Please choose at least one specialty from the list before continuing. This helps students find you for the right subjects.');
+      setTimeout(() => {
+        subjectsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        subjectsRef.current?.focus?.();
+      }, 50);
+      return;
+    }
+    // clear subject error when valid
+    setSubjectError(null);
+
+    // Client-side validation for required Contact field
+    const trimmedContact = (contact ?? '').toString().trim();
+    if (!trimmedContact) {
+      setContactError('Contact number is required to allow students to reach you. Please provide a phone number to proceed.');
+      // focus and scroll to the contact input for quick correction
+      setTimeout(() => {
+        contactRef.current?.focus();
+        contactRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+      return;
+    }
+    if (trimmedContact.length < 6 || trimmedContact.length > 60) {
+      setContactError('The contact number looks invalid. Please enter a valid phone number (6–60 characters).');
+      setTimeout(() => {
+        contactRef.current?.focus();
+        contactRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+      return;
+    }
+    // clear any previous error
+    setContactError(null);
+
     setSaving(true);
     try {
       const res = await fetch('/api/teacher/profile', {
@@ -122,7 +147,6 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
           subjects: subjects,
           contact,
           linkedin,
-          skills,
         }),
       });
       if (!res.ok) {
@@ -204,8 +228,19 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block mb-2 text-sm font-medium">Contact (required)</label>
-          <Input value={contact} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setContact(e.target.value)} placeholder="Phone number (required)" />
-          <p className="text-xs text-slate-500 mt-1">Provide a contact number so students can reach you. This is required.</p>
+          <Input
+            ref={contactRef}
+            value={contact}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setContact(e.target.value); if (contactError) setContactError(null); }}
+            placeholder="Phone number (required)"
+            aria-invalid={contactError ? 'true' : 'false'}
+            aria-describedby={contactError ? 'contact-error' : undefined}
+          />
+          {contactError ? (
+            <p id="contact-error" className="mt-1 text-sm text-red-600">{contactError}</p>
+          ) : (
+            <p className="text-xs text-slate-500 mt-1">Provide a contact number so students can reach you. This is required.</p>
+          )}
         </div>
 
         <div>
@@ -217,7 +252,7 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
 
       <div>
         <label className="block mb-2 text-sm font-medium">Subjects / Specialties</label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div ref={subjectsRef} tabIndex={-1} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {ALLOWED_SUBJECTS.map((s) => {
             const selected = subjects.includes(s);
             return (
@@ -225,7 +260,12 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
                 key={s}
                 type="button"
                 onClick={() => {
-                  setSubjects((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+                  setSubjects((prev) => {
+                    const next = prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s];
+                    // clear subject error when user interacts
+                    if (next.length > 0) setSubjectError(null);
+                    return next;
+                  });
                 }}
                 className={`text-sm text-left px-3 py-2 rounded-lg border ${selected ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-800 border-emerald-100'} transition`}
                 aria-pressed={selected}
@@ -236,24 +276,11 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
             );
           })}
         </div>
-        <p className="mt-2 text-xs text-slate-500">Choose one or more from the list. Adding custom specializations is not allowed.</p>
-      </div>
-
-      <div>
-        <label className="block mb-2 text-sm font-medium">Skills</label>
-        <div className="flex gap-2 items-center">
-          <Input value={skillInput} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSkillInput(e.target.value)} placeholder="Add a skill and press Enter or click Add" onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>)=>{ if(e.key=== 'Enter'){ e.preventDefault(); addSkill(); } }} />
-          <Button onClick={addSkill} size="sm">Add</Button>
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {skills.map((s) => (
-            <Badge key={s} className="flex items-center gap-2">
-              <span>{s}</span>
-              <button aria-label={`Remove ${s}`} onClick={() => removeSkill(s)} className="ml-2 text-xs opacity-70">×</button>
-            </Badge>
-          ))}
-        </div>
+        {subjectError ? (
+          <p className="mt-2 text-sm text-red-600" role="alert">{subjectError}</p>
+        ) : (
+          <p className="mt-2 text-xs text-slate-500">Choose one or more from the list. Adding custom specializations is not allowed.</p>
+        )}
       </div>
 
       <div className="flex gap-2 items-center">
