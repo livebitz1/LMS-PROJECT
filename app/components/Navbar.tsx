@@ -28,7 +28,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="border-b border-gray-100 bg-white/60 backdrop-blur-sm relative">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-gray-100 bg-white/60 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-6 py-4 grid grid-cols-3 items-center">
         {/* Left: Logo (playful badge) */}
         <div className="flex items-center gap-4">
@@ -116,7 +116,7 @@ export default function Navbar() {
           </ul>
         </nav>
 
-        {/* Mobile controls: sign up/user + hamburger at top-right (absolute within header so visually top-right; menu panel remains in flow) */}
+        {/* Mobile controls: sign up/user + hamburger at top-right */}
         <div className="md:hidden">
           <div className="absolute right-4 top-4 flex items-center gap-0 z-40">
             <div className="flex items-center gap-0">
@@ -154,7 +154,6 @@ export default function Navbar() {
                 title="Sign up"
                 style={{ transformStyle: 'preserve-3d' }}
               >
-                {/* slight hand-drawn corner via SVG */}
                 <span className="inline-flex items-center gap-2">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                     <path d="M3 12h18" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" />
@@ -172,7 +171,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu panel (stacked links) - now in normal flow so it expands the header and pushes content down */}
+      {/* Mobile menu panel - pushes content down */}
       {open && (
         <div className="md:hidden bg-white shadow-lg border-t border-gray-100">
           <div className="max-w-7xl mx-auto px-6 py-4">
@@ -187,7 +186,6 @@ export default function Navbar() {
                   <li><Link href="/teacher/bookings" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-400 hover:text-white whitespace-nowrap no-underline hover:no-underline flex items-center gap-2"><NavbarIcons.bookings className="w-5 h-5" /> Bookings</Link></li>
                 </>
               )}
-              {/* Learner dashboard link (visible when server role indicates student) */}
               {role === 'student' && (
                 <li><Link href="/learner/dashboard" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-400 hover:text-white whitespace-nowrap no-underline hover:no-underline flex items-center gap-2"><NavbarIcons.learnerDashboard className="w-5 h-5" /> learner-dashboard</Link></li>
               )}

@@ -3,6 +3,10 @@
 import Link from "next/link";
 import GetStartedButton from "./components/GetStartedButton";
 import Navbar from "./components/Navbar";
+import Hero from "./components/home/Hero";
+import FeaturesGrid from "./components/home/FeaturesGrid";
+import AudienceCards from "./components/home/AudienceCards";
+import PopularSubjects from "./components/home/PopularSubjects";
 
 export default function Home() {
   const FEATURES = [
@@ -39,72 +43,25 @@ export default function Home() {
 
       {/* Hero */}
       <main className="max-w-6xl mx-auto px-6 py-20">
-        <div className="text-center">
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold leading-tight">
-            Learn together, teach better.
-          </h1>
-          <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-            A collaborative LMS where students and teachers create, share and track learning — all in one place.
-          </p>
-
-          {/* Single Get Started CTA component */}
-          <div className="mt-8 flex items-center justify-center">
-            <GetStartedButton />
-          </div>
-        </div>
+        <Hero />
 
         {/* Features / collaboration surface */}
-        <section className="mt-16 collaboration-shift">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold">Collaboration features</h2>
-            <Link href="/features" className="text-sm text-gray-600 hover:underline">Explore all</Link>
+        <FeaturesGrid />
+
+        <AudienceCards />
+
+        {/* Popular subjects - upgraded professional cards */}
+        <PopularSubjects />
+
+        <div className="mt-8 border-t pt-6 flex items-center justify-between text-sm text-gray-600">
+          <div className="flex gap-4">
+            <Link href="/terms" className="hover:underline">Terms</Link>
+            <span>•</span>
+            <Link href="/stories" className="hover:underline">Customer Stories</Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {FEATURES.map((f) => (
-              <div
-                key={f.id}
-                className="group block relative rounded-2xl p-6 bg-white border border-transparent hover:border-gray-100 shadow-sm hover:shadow-lg transition-transform transform hover:-translate-y-2 focus:outline-none"
-                aria-labelledby={`feature-${f.id}-title`}
-                // Non-interactive card: clicking does nothing as requested
-              >
-                <div className="h-full flex flex-col justify-between">
-                  <div>
-                    <div className="text-xs uppercase tracking-wide text-gray-400 mb-2">{f.title}</div>
-                    <h3 id={`feature-${f.id}-title`} className="text-2xl font-semibold text-slate-900 mb-3">{f.title}</h3>
-                    <p className="text-sm text-gray-600">{f.desc}</p>
-                  </div>
-
-                  <div className="mt-6 flex items-center justify-between">
-                    <div className="text-sm text-gray-500 group-hover:text-slate-700 transition">Learn more</div>
-
-                    <span className="ml-4">
-                      <span className="sr-only">Open {f.title}</span>
-                      <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-arrow-right">
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                          <polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
-                      </div>
-                    </span>
-                  </div>
-                </div>
-                {/* Decorative focus ring element for better contrast on keyboard navigation */}
-                <span className="absolute -inset-px rounded-2xl pointer-events-none" aria-hidden />
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 border-t pt-6 flex items-center justify-between text-sm text-gray-600">
-            <div className="flex gap-4">
-              <Link href="/terms" className="hover:underline">Terms</Link>
-              <span>•</span>
-              <Link href="/stories" className="hover:underline">Customer Stories</Link>
-            </div>
-
-            <Link href="/onboarding" className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-200">→</Link>
-          </div>
-        </section>
+          <Link href="/onboarding" className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-200">→</Link>
+        </div>
       </main>
     </div>
   );

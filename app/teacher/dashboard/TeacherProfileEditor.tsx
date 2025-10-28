@@ -77,6 +77,24 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
   const [contactError, setContactError] = useState<string | null>(null);
   const contactRef = useRef<HTMLInputElement | null>(null);
   const [linkedin, setLinkedin] = useState('');
+  const [linkedinError, setLinkedinError] = useState<string | null>(null);
+  const linkedinRef = useRef<HTMLInputElement | null>(null);
+
+  // Track last saved snapshot to determine dirty state
+  const [lastSavedSnapshot, setLastSavedSnapshot] = useState<string | null>(null);
+
+  const makeSnapshot = () => JSON.stringify({
+    displayName: displayName ?? '',
+    bio: bio ?? '',
+    degree: degree ?? '',
+    experienceYears: experienceYears === '' ? '' : Number(experienceYears),
+    hourlyRate: hourlyRate === '' ? '' : Number(hourlyRate),
+    subjects: Array.isArray(subjects) ? subjects : [],
+    contact: contact ?? '',
+    linkedin: linkedin ?? '',
+  });
+
+  const isDirty = lastSavedSnapshot !== null ? makeSnapshot() !== lastSavedSnapshot : true;
 
   useEffect(() => {
     if (!profile) return;
@@ -93,6 +111,21 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
     let derived = profile.displayName ?? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
     if (!derived) derived = user.name ?? '';
     setDisplayName(derived);
+
+    // Initialize lastSavedSnapshot to current profile values (or defaults)
+    setTimeout(() => {
+      const snap = JSON.stringify({
+        displayName: profile.displayName ?? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ?? '',
+        bio: profile.bio ?? '',
+        degree: profile.degree ?? '',
+        experienceYears: profile.experienceYears ?? '',
+        hourlyRate: profile.hourlyRate ?? '',
+        subjects: Array.isArray(profile.subjects) ? profile.subjects : profile.subjects ?? [],
+        contact: profile.contact ?? '',
+        linkedin: profile.linkedin ?? '',
+      });
+      setLastSavedSnapshot(snap);
+    }, 0);
   }, [profile, user.firstName, user.lastName, user.name]);
 
   const handleSave = async () => {
@@ -130,6 +163,39 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
     // clear any previous error
     setContactError(null);
 
+    // Validate LinkedIn URL if provided
+    const validateLinkedin = (value: string): string | null => {
+      const v = (value ?? '').toString().trim();
+      if (!v) return null; // optional field
+      let candidate = v;
+      // if user typed something like 'linkedin.com/in/you' or 'www.linkedin.com/in/you' add scheme
+      if (!/^https?:\/\//i.test(candidate)) candidate = 'https://' + candidate;
+      try {
+        const u = new URL(candidate);
+        const host = u.hostname.toLowerCase();
+        if (!host.includes('linkedin')) return null; // invalid
+        // Normalize to https and remove tracking params
+        u.protocol = 'https:';
+        u.hash = '';
+        u.search = '';
+        return u.toString().replace(/\/$/, '');
+      } catch {
+        return null;
+      }
+    };
+
+    const normalizedLinkedin = validateLinkedin(linkedin);
+    if (linkedin && !normalizedLinkedin) {
+      setLinkedinError('Please provide a valid LinkedIn profile URL (e.g. https://www.linkedin.com/in/your-name)');
+      setSaving(false);
+      setTimeout(() => {
+        linkedinRef.current?.focus();
+        linkedinRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+      return;
+    }
+    setLinkedinError(null);
+
     setSaving(true);
     try {
       const res = await fetch('/api/teacher/profile', {
@@ -144,7 +210,7 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
           // subjects is a controlled array of allowed values
           subjects: subjects,
           contact,
-          linkedin,
+          linkedin: normalizedLinkedin ?? linkedin,
         }),
       });
       if (!res.ok) {
@@ -165,6 +231,8 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
       // Refresh server props and show success state with animated tick
       router.refresh();
       setSaved(true);
+      // update lastSaved snapshot so the Save button becomes disabled until changes
+      setLastSavedSnapshot(makeSnapshot());
       // clear saved state after a short delay so button returns to normal
       setTimeout(() => setSaved(false), 3500);
     } catch (err) {
@@ -243,8 +311,47 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
 
         <div>
           <label className="block mb-2 text-sm font-medium">LinkedIn (optional)</label>
-          <Input value={linkedin} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLinkedin(e.target.value)} placeholder="LinkedIn URL (optional)" />
-          <p className="text-xs text-slate-500 mt-1">Optional — add your LinkedIn profile for students to view your professional background.</p>
+          <Input
+            ref={linkedinRef}
+            value={linkedin}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setLinkedin(e.target.value); if (linkedinError) setLinkedinError(null); }}
+            onBlur={() => {
+              // attempt to normalize on blur for nicer UX
+              const v = (linkedin ?? '').toString().trim();
+              if (!v) { setLinkedinError(null); return; }
+              let candidate = v;
+              if (!/^https?:\/\//i.test(candidate)) candidate = 'https://' + candidate;
+              try {
+                const u = new URL(candidate);
+                if (!u.hostname.toLowerCase().includes('linkedin')) {
+                  setLinkedinError('Please enter a LinkedIn profile URL (example: https://www.linkedin.com/in/your-name)');
+                  return;
+                }
+                u.protocol = 'https:';
+                u.hash = '';
+                u.search = '';
+                setLinkedin(u.toString().replace(/\/$/, ''));
+                setLinkedinError(null);
+              } catch {
+                setLinkedinError('Please enter a valid LinkedIn URL');
+              }
+            }}
+            placeholder="LinkedIn URL (optional)"
+            aria-invalid={linkedinError ? 'true' : 'false'}
+            aria-describedby={linkedinError ? 'linkedin-error' : undefined}
+          />
+          {linkedinError ? (
+            <p id="linkedin-error" className="mt-1 text-sm text-red-600">{linkedinError}</p>
+          ) : (
+            <p className="text-xs text-slate-500 mt-1">Optional — add your LinkedIn profile for students to view your professional background.</p>
+          )}
+
+          {/* Preview link when a valid LinkedIn URL is present */}
+          {linkedin && !linkedinError && (
+            <div className="mt-2">
+              <a href={linkedin} target="_blank" rel="noreferrer" className="text-xs text-emerald-600 underline">View LinkedIn profile</a>
+            </div>
+          )}
         </div>
       </div>
 
@@ -282,7 +389,11 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
       </div>
 
       <div className="flex gap-2 items-center">
-        <Button onClick={handleSave} disabled={saving || saved} className="relative flex items-center">
+        <Button
+          onClick={handleSave}
+          disabled={!isDirty || saving}
+          className={`relative flex items-center transition-opacity ${(!isDirty || saving) ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}
+        >
           {/* Saving state */}
           {saving && (
             <span className="mr-2 inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true" />
