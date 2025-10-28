@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 
 type User = {
   id: string;
@@ -29,7 +28,6 @@ type Profile = {
   degree?: string | null;
   experienceYears?: number | null;
   subjects?: string[] | null;
-  skills?: string[] | null;
   linkedin?: string | null;
   contact?: string | null;
   profileImageUrl?: string | null;
@@ -154,7 +152,7 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
         try {
           const payload = await res.json();
           details = payload?.details || JSON.stringify(payload) || details;
-        } catch { 
+        } catch {
           const text = await res.text().catch(() => '');
           details = text || details;
         }

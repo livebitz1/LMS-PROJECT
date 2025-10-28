@@ -37,7 +37,7 @@ export default async function TeacherDashboardPage() {
   if (tp && typeof tp.findUnique === 'function') {
     teacherProfile = await tp.findUnique({ where: { userId: user.id } });
   } else {
-    const rows: TeacherProfile[] = await prisma.$queryRaw`SELECT id, "userId", "displayName", bio, degree, "experienceYears", "hourlyRate", subjects, skills, linkedin, "createdAt", "updatedAt" FROM "TeacherProfile" WHERE "userId" = ${user.id} LIMIT 1`;
+    const rows: TeacherProfile[] = await prisma.$queryRaw`SELECT id, "userId", "displayName", bio, degree, "experienceYears", "hourlyRate", subjects, linkedin, "createdAt", "updatedAt" FROM "TeacherProfile" WHERE "userId" = ${user.id} LIMIT 1`;
     teacherProfile = rows?.[0] ?? null;
   }
 
@@ -69,17 +69,21 @@ export default async function TeacherDashboardPage() {
 
   const profileSerialized = teacherProfile
     ? {
-        ...teacherProfile,
+        id: teacherProfile.id,
+        userId: teacherProfile.userId,
+        displayName: teacherProfile.displayName ?? null,
+        bio: teacherProfile.bio ?? null,
+        degree: teacherProfile.degree ?? null,
+        experienceYears: teacherProfile.experienceYears ?? null,
         subjects: Array.isArray(teacherProfile.subjects)
           ? teacherProfile.subjects.filter((s): s is string => typeof s === 'string')
           : typeof teacherProfile.subjects === 'string'
             ? teacherProfile.subjects.split(',').map((s) => s.trim()).filter(Boolean)
             : [],
-        skills: Array.isArray(teacherProfile.skills)
-          ? teacherProfile.skills.filter((s): s is string => typeof s === 'string')
-          : typeof teacherProfile.skills === 'string'
-            ? teacherProfile.skills.split(',').map((s) => s.trim()).filter(Boolean)
-            : [],
+        linkedin: teacherProfile.linkedin ?? null,
+        profileImageUrl: teacherProfile.profileImageUrl ?? null,
+        hourlyRate: teacherProfile.hourlyRate ?? null,
+        contact: (teacherProfile as unknown as { contact?: string | null }).contact ?? null,
         createdAt: teacherProfile.createdAt ? teacherProfile.createdAt.toISOString() : '',
         updatedAt: teacherProfile.updatedAt ? teacherProfile.updatedAt.toISOString() : '',
       }

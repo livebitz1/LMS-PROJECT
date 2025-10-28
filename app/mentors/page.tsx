@@ -24,15 +24,10 @@ export default async function MentorsPage() {
         : typeof p.subjects === 'string'
           ? (p.subjects as string).split(',').map((s: string) => s.trim()).filter(Boolean)
           : [],
-      skills: Array.isArray(p.skills)
-        ? p.skills.filter((s: unknown): s is string => typeof s === 'string')
-        : typeof p.skills === 'string'
-          ? (p.skills as string).split(',').map((s: string) => s.trim()).filter(Boolean)
-          : [],
     }));
   } else {
     // fallback to raw SQL join if Prisma delegate isn't available (robust for mismatched client)
-    const rows = (await prisma.$queryRaw`SELECT tp.id, tp."userId", tp."displayName", tp."hourlyRate", tp.bio, tp.degree, tp."experienceYears", tp.subjects, tp.skills, tp.linkedin, tp."profileImageUrl", tp."createdAt", tp."updatedAt",
+    const rows = (await prisma.$queryRaw`SELECT tp.id, tp."userId", tp."displayName", tp."hourlyRate", tp.bio, tp.degree, tp."experienceYears", tp.subjects, tp.linkedin, tp."profileImageUrl", tp."createdAt", tp."updatedAt",
              u."clerkId", u.email, u.name, u."firstName", u."lastName", u."profileImageUrl" as "userProfileImageUrl", u.role as "userRole", u."createdAt" as "userCreatedAt"
       FROM "TeacherProfile" tp
       JOIN "User" u ON tp."userId" = u.id
@@ -48,7 +43,6 @@ export default async function MentorsPage() {
         degree: string | null;
         experienceYears: number | null;
         subjects: unknown;
-        skills: unknown;
         linkedin: string | null;
         profileImageUrl: string | null;
         createdAt: string | Date;
@@ -74,11 +68,6 @@ export default async function MentorsPage() {
           ? row.subjects.filter((s: unknown): s is string => typeof s === 'string')
           : typeof row.subjects === 'string'
             ? (row.subjects as string).split(',').map((s: string) => s.trim()).filter(Boolean)
-            : [],
-        skills: Array.isArray(row.skills)
-          ? row.skills.filter((s: unknown): s is string => typeof s === 'string')
-          : typeof row.skills === 'string'
-            ? (row.skills as string).split(',').map((s: string) => s.trim()).filter(Boolean)
             : [],
         linkedin: row.linkedin ?? null,
         profileImageUrl: row.profileImageUrl ?? null,

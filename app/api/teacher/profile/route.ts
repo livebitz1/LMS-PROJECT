@@ -25,7 +25,6 @@ type TeacherProfileRow = {
   experienceYears: number | null;
   hourlyRate: number | null;
   subjects: string | null; // JSON string
-  skills: string | null; // JSON string
   linkedin: string | null;
   contact: string | null;
   createdAt: Date;
@@ -38,7 +37,7 @@ export async function POST(req: NextRequest) {
     if (!clerkUserId) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
 
     const body = await req.json();
-    const { firstName, lastName, displayName, bio, degree, experienceYears, subjects, linkedin, skills, hourlyRate, contact } = body || {};
+    const { firstName, lastName, displayName, bio, degree, experienceYears, subjects, linkedin, hourlyRate, contact } = body || {};
 
     // Trim inputs and normalize
     const tFirstName = typeof firstName === 'string' ? firstName.trim() : undefined;
@@ -63,7 +62,6 @@ export async function POST(req: NextRequest) {
     };
 
     const tSubjects = normalizeList(subjects);
-    const tSkills = normalizeList(skills);
 
     // Validate lengths
     if (tDisplayName && tDisplayName.length > 100) {
@@ -115,7 +113,6 @@ export async function POST(req: NextRequest) {
       experienceYears: experienceYears ?? null,
       hourlyRate: tHourly,
       subjects: tSubjects,
-      skills: tSkills,
       linkedin: tLinkedin ?? null,
     };
 
@@ -142,10 +139,9 @@ export async function POST(req: NextRequest) {
     if (!profile) {
       // Fallback: raw SQL upsert (select -> update or insert) to support runtime environments
       const subjectsJson = profileData.subjects ? JSON.stringify(profileData.subjects) : null;
-      const skillsJson = profileData.skills ? JSON.stringify(profileData.skills) : null;
 
       // Check existing
-      const existing: TeacherProfileRow[] = await prisma.$queryRaw`SELECT id, "userId", "displayName", bio, degree, "experienceYears", "hourlyRate", subjects, skills, linkedin, contact, "createdAt", "updatedAt" FROM "TeacherProfile" WHERE "userId" = ${userId} LIMIT 1`;
+      const existing: TeacherProfileRow[] = await prisma.$queryRaw`SELECT id, "userId", "displayName", bio, degree, "experienceYears", "hourlyRate", subjects, linkedin, contact, "createdAt", "updatedAt" FROM "TeacherProfile" WHERE "userId" = ${userId} LIMIT 1`;
       if (existing && existing.length > 0) {
         await prisma.$executeRaw`
           UPDATE "TeacherProfile" SET
@@ -155,21 +151,20 @@ export async function POST(req: NextRequest) {
             "experienceYears" = ${profileData.experienceYears},
             "hourlyRate" = ${profileData.hourlyRate},
             subjects = ${subjectsJson}::jsonb,
-            skills = ${skillsJson}::jsonb,
             linkedin = ${profileData.linkedin},
             contact = ${profileData.contact},
             "updatedAt" = now()
           WHERE "userId" = ${userId}
         `;
-        const rows: TeacherProfileRow[] = await prisma.$queryRaw`SELECT id, "userId", "displayName", bio, degree, "experienceYears", "hourlyRate", subjects, skills, linkedin, contact, "createdAt", "updatedAt" FROM "TeacherProfile" WHERE "userId" = ${userId} LIMIT 1`;
+        const rows: TeacherProfileRow[] = await prisma.$queryRaw`SELECT id, "userId", "displayName", bio, degree, "experienceYears", "hourlyRate", subjects, linkedin, contact, "createdAt", "updatedAt" FROM "TeacherProfile" WHERE "userId" = ${userId} LIMIT 1`;
         profile = rows[0] ?? null;
       } else {
         const newId = randomUUID();
         await prisma.$executeRaw`
-          INSERT INTO "TeacherProfile" (id, "userId", "displayName", bio, degree, "experienceYears", "hourlyRate", subjects, skills, linkedin, contact, "createdAt", "updatedAt")
-          VALUES (${newId}, ${userId}, ${profileData.displayName}, ${profileData.bio}, ${profileData.degree}, ${profileData.experienceYears}, ${profileData.hourlyRate}, ${subjectsJson}::jsonb, ${skillsJson}::jsonb, ${profileData.linkedin}, ${profileData.contact}, now(), now())
+          INSERT INTO "TeacherProfile" (id, "userId", "displayName", bio, degree, "experienceYears", "hourlyRate", subjects, linkedin, contact, "createdAt", "updatedAt")
+          VALUES (${newId}, ${userId}, ${profileData.displayName}, ${profileData.bio}, ${profileData.degree}, ${profileData.experienceYears}, ${profileData.hourlyRate}, ${subjectsJson}::jsonb, ${profileData.linkedin}, ${profileData.contact}, now(), now())
         `;
-        const rows: TeacherProfileRow[] = await prisma.$queryRaw`SELECT id, "userId", "displayName", bio, degree, "experienceYears", "hourlyRate", subjects, skills, linkedin, contact, "createdAt", "updatedAt" FROM "TeacherProfile" WHERE "userId" = ${userId} LIMIT 1`;
+        const rows: TeacherProfileRow[] = await prisma.$queryRaw`SELECT id, "userId", "displayName", bio, degree, "experienceYears", "hourlyRate", subjects, linkedin, contact, "createdAt", "updatedAt" FROM "TeacherProfile" WHERE "userId" = ${userId} LIMIT 1`;
         profile = rows[0] ?? null;
       }
     }

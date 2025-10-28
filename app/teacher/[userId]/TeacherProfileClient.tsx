@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 type ProfileSerialized = {
   id: string;
@@ -15,7 +14,6 @@ type ProfileSerialized = {
   degree?: string | null;
   experienceYears?: number | null;
   subjects?: string[];
-  skills?: string[];
   linkedin?: string | null;
   profileImageUrl?: string | null;
   createdAt?: string | null;
@@ -87,29 +85,21 @@ export default function TeacherProfileClient({ profile }: { profile: ProfileSeri
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <h4 className="text-sm font-medium mb-2">Skills</h4>
-              <div className="flex flex-wrap gap-2">
-                {Array.isArray(profile.skills) && profile.skills.length > 0 ? (
-                  profile.skills.map((s: string, i: number) => (
-                    <Badge key={`${String(s)}-${i}`} className="px-3 py-1">{s}</Badge>
-                  ))
-                ) : (
-                  <div className="text-sm text-slate-500">No skills listed</div>
-                )}
-              </div>
-            </div>
-
-            <div>
               <h4 className="text-sm font-medium mb-2">Subjects</h4>
               <div className="flex flex-wrap gap-2">
                 {Array.isArray(profile.subjects) && profile.subjects.length > 0 ? (
                   profile.subjects.map((s: string, i: number) => (
-                    <Badge key={`sub-${i}`} className="px-3 py-1 variant-subject">{s}</Badge>
+                    <span key={`sub-${i}`} className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm">{s}</span>
                   ))
                 ) : (
                   <div className="text-sm text-slate-500">No subjects listed</div>
                 )}
               </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-medium mb-2">Credentials</h4>
+              <div className="text-sm text-slate-700">{profile.degree ?? '—'}</div>
             </div>
           </div>
         </CardContent>

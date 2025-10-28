@@ -26,7 +26,6 @@ export default async function Page({ params }: { params: Promise<{ userId: strin
       hourlyRate: number | null;
       displayName: string | null;
       subjects: unknown;
-      skills: unknown;
       user: User;
       userId: string;
       userProfileImageUrl: string | null;
@@ -54,7 +53,6 @@ export default async function Page({ params }: { params: Promise<{ userId: strin
         contact: row.contact ?? null,
         experienceYears: row.experienceYears,
         subjects: row.subjects,
-        skills: row.skills,
         linkedin: row.linkedin,
         profileImageUrl: row.profileImageUrl,
         createdAt: row.createdAt,
@@ -89,11 +87,6 @@ export default async function Page({ params }: { params: Promise<{ userId: strin
       ? profile.subjects.filter((s: unknown): s is string => typeof s === 'string')
       : typeof profile.subjects === 'string'
         ? (profile.subjects as string).split(',').map((s: string) => s.trim()).filter(Boolean)
-        : [],
-    skills: Array.isArray(profile.skills)
-      ? profile.skills.filter((s: unknown): s is string => typeof s === 'string')
-      : typeof profile.skills === 'string'
-        ? (profile.skills as string).split(',').map((s: string) => s.trim()).filter(Boolean)
         : [],
     linkedin: profile.linkedin ?? null,
     profileImageUrl: profile.profileImageUrl ?? null,
