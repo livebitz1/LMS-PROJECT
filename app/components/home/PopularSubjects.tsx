@@ -84,7 +84,7 @@ export default function PopularSubjects() {
             <article
               key={idx}
               className={`
-                snap-center flex-shrink-0 w-[300px] h-[320px] bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col
+                group snap-center flex-shrink-0 w-[300px] h-[320px] bg-white rounded-xl border border-black shadow-sm flex flex-col
                 transition-all duration-700 ease-out
                 ${isVisible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}
               `}
@@ -93,8 +93,8 @@ export default function PopularSubjects() {
               {/* Header */}
               <div className="p-4 border-b border-gray-100">
                 <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-                    <subject.icon className="w-5 h-5 text-emerald-600" />
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center border-2 border-black transform-gpu transition-transform duration-200 ease-out group-hover:scale-105 group-hover:-translate-y-1">
+                    <subject.icon className="w-5 h-5 text-emerald-600 transition-colors duration-200 group-hover:text-black" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-bold text-slate-900 leading-tight">
@@ -112,7 +112,7 @@ export default function PopularSubjects() {
                 {subject.buttons.map((btn, i) => (
                   <button
                     key={i}
-                    className="w-full text-left text-xs font-medium px-3 py-1.5 rounded-md bg-gray-50 text-slate-700 border border-gray-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition-all duration-150 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full text-left text-xs font-medium px-3 py-1.5 rounded-md bg-gray-50 text-slate-700 border border-black hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition-all duration-200 ease-out transform-gpu hover:-translate-y-1 hover:shadow-lg active:translate-y-0 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   >
                     {btn}
                   </button>

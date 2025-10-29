@@ -108,7 +108,7 @@ export default function FeaturesGrid() {
 
                         <div className="relative flex flex-col h-full">
                             <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center shadow-inner">
+                                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center shadow-inner border-2 border-black">
                                     <FeatureIcon id={feature.id} />
                                 </div>
                                 <div className="flex-1">
@@ -171,9 +171,9 @@ export default function FeaturesGrid() {
                             style={{ transitionDelay: `${100 + idx * 80}ms` }}
                         >
                             <div className="flex flex-col h-full">
-                                <div className="flex items-start gap-3">
-                                    <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center shadow-inner">
-                                        <FeatureIcon id={feature.id} className="w-6 h-6" />
+                                <div className="flex items-start gap-4">
+                                    <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-emerald-50 flex items-center justify-center shadow-inner border-2 border-black">
+                                        <FeatureIcon id={feature.id} />
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-1">
