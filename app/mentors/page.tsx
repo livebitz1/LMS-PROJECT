@@ -9,6 +9,7 @@ import Navbar from '../components/Navbar'
 import type { Profile } from './MentorsClient';
 
 export const metadata = { title: 'Mentors' }
+export const dynamic = 'force-dynamic';
 
 export default async function MentorsPage() {
   // fetch all teacher profiles joined with user

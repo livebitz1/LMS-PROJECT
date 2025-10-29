@@ -2,7 +2,7 @@
 
 import GetStartedButton from "../GetStartedButton";
 import React, { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Sparkles, Users, Target } from "lucide-react";
 
 export default function Hero() {

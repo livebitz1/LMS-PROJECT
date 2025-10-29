@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import GetStartedButton from "./components/GetStartedButton";
 import Navbar from "./components/Navbar";
 import Hero from "./components/home/Hero";
 import FeaturesGrid from "./components/home/FeaturesGrid";
@@ -9,33 +8,6 @@ import AudienceCards from "./components/home/AudienceCards";
 import PopularSubjects from "./components/home/PopularSubjects";
 
 export default function Home() {
-  const FEATURES = [
-    {
-      id: "courses",
-      title: "Courses",
-      desc: "Create, organize and share course material with rich content and modules.",
-      href: "/courses",
-    },
-    {
-      id: "assignments",
-      title: "Assignments",
-      desc: "Assign homework, collect submissions, and give feedback inline.",
-      href: "/assignments",
-    },
-    {
-      id: "messaging",
-      title: "Messaging",
-      desc: "Direct messaging and group discussions to keep students and teachers connected.",
-      href: "/messages",
-    },
-    {
-      id: "gradebook",
-      title: "Gradebook",
-      desc: "Track progress, grades, and analytics for each student and course.",
-      href: "/gradebook",
-    },
-  ];
-
   return (
     <div className="bg-white text-slate-900 min-h-screen">
       {/* Navbar component */}

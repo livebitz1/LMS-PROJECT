@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 const FEATURES = [
     {
@@ -218,14 +219,19 @@ export default function FeaturesGrid() {
                     transitionDelay: "100ms",
                 }}
             >
-                <img
-                    src="/IMAGE-1.png"
-                    alt="Collaboration features illustration"
-                    className="w-full max-w-7xl rounded-lg shadow-md object-cover"
-                    style={{
-                        animation: imageVisible ? "popBounce 0.6s ease-out forwards" : "none",
-                    }}
-                />
+                <div className="w-full max-w-7xl rounded-lg shadow-md overflow-hidden">
+                    <Image
+                        src="/IMAGE-1.png"
+                        alt="Collaboration features illustration"
+                        width={1600}
+                        height={900}
+                        className="w-full h-auto object-cover block"
+                        style={{
+                            animation: imageVisible ? "popBounce 0.6s ease-out forwards" : "none",
+                        }}
+                        unoptimized
+                    />
+                </div>
             </div>
         </section>
     );
