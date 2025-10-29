@@ -68,7 +68,7 @@ export default function FeaturesGrid() {
     return (
         <section
             ref={sectionRef}
-            className="mt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
+            className="features-grid mt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
         >
             {/* Section Header */}
             <div
@@ -91,8 +91,8 @@ export default function FeaturesGrid() {
                     <div
                         key={feature.id}
                         className={`
-              group relative p-6 sm:p-8 rounded-2xl bg-white border border-gray-100
-              shadow-sm transition-all duration-700 ease-out
+              group relative p-6 sm:p-8 rounded-[20px] bg-white border border-transparent hover:border-transparent overflow-visible group-hover:[box-shadow:none]
+              transition-all duration-700 ease-out
               ${isVisible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}
             `}
                         style={{
@@ -102,48 +102,52 @@ export default function FeaturesGrid() {
                                     ? "translateY(2rem)"
                                     : "translateY(-2rem)"
                                 : "translateY(12rem)",
+                            boxShadow: "0 8px 20px rgba(4,120,87,0.03)"
                         }}
                     >
-                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-50/0 to-emerald-50/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                        {/* single decorative outline (visible by default) */}
+                        <span className="pointer-events-none absolute -inset-[4px] rounded-[20px] border-8 border-emerald-800 transform-gpu scale-100 opacity-100 transition-all duration-300 group-hover:scale-105 group-hover:opacity-100 z-20" />
 
-                        <div className="relative flex flex-col h-full">
-                            <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center shadow-inner border-2 border-black">
-                                    <FeatureIcon id={feature.id} />
+                        <div className="transform-gpu transition-transform duration-300 will-change-transform group-hover:-rotate-2">
+                            <div className="relative flex flex-col h-full gap-3 min-h-0">
+                                <div className="flex items-start gap-4">
+                                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center shadow-inner border-2 border-black">
+                                        <FeatureIcon id={feature.id} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-1">
+                                            {feature.title}
+                                        </p>
+                                        <h3 className="text-xl font-bold text-slate-900 mb-2">
+                                            {feature.title}
+                                        </h3>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-1">
-                                        {feature.title}
-                                    </p>
-                                    <h3 className="text-xl font-bold text-slate-900 mb-2">
-                                        {feature.title}
-                                    </h3>
-                                </div>
-                            </div>
 
-                            <p className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed flex-1">
-                                {feature.desc}
-                            </p>
+                                <p className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed flex-1">
+                                    {feature.desc}
+                                </p>
 
-                            <div className="mt-6 flex items-center">
-                                <span className="text-sm font-medium text-slate-500 group-hover:text-emerald-700 transition-colors duration-300">
-                                    Learn more
-                                </span>
-                                <div className="ml-3 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-110 transition-all duration-300">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="14"
-                                        height="14"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    >
-                                        <line x1="5" y1="12" x2="19" y2="12" />
-                                        <polyline points="12 5 19 12 12 19" />
-                                    </svg>
+                                <div className="mt-6 flex items-center">
+                                    <span className="text-sm font-medium text-slate-500 group-hover:text-emerald-700 transition-colors duration-300">
+                                        Learn more
+                                    </span>
+                                    <div className="ml-3 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-110 transition-all duration-300">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <line x1="5" y1="12" x2="19" y2="12" />
+                                            <polyline points="12 5 19 12 12 19" />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -161,38 +165,36 @@ export default function FeaturesGrid() {
                     {FEATURES.map((feature, idx) => (
                         <div
                             key={feature.id}
-                            className={`
-                                snap-start flex-shrink-0 w-64 sm:w-72 aspect-square 
-                                p-5 sm:p-6 rounded-2xl bg-white border border-gray-100 shadow-sm
-                                flex flex-col
-                                transition-all duration-700 ease-out
-                                ${isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}
-                            `}
-                            style={{ transitionDelay: `${100 + idx * 80}ms` }}
+                            className={`group relative p-5 rounded-[20px] bg-white border border-transparent hover:border-transparent transition-all duration-700 ease-out snap-start flex-shrink-0 w-[54vw] sm:w-[18rem] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+                            style={{ transitionDelay: `${100 + idx * 100}ms`, boxShadow: "0 8px 20px rgba(4,120,87,0.03)" }}
                         >
-                            <div className="flex flex-col h-full">
-                                <div className="flex items-start gap-4">
-                                    <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-emerald-50 flex items-center justify-center shadow-inner border-2 border-black">
-                                        <FeatureIcon id={feature.id} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-1">
-                                            {feature.title}
-                                        </p>
-                                        <h3 className="text-lg font-bold text-slate-900 mb-2">
-                                            {feature.title}
-                                        </h3>
-                                    </div>
-                                </div>
+                            <span className="pointer-events-none absolute -inset-[4px] rounded-[20px] border-8 border-emerald-800 transform-gpu scale-100 opacity-100 transition-all duration-300 group-hover:scale-105 group-hover:opacity-100 z-20" />
 
-                                <p className="mt-2 text-sm text-slate-600 leading-relaxed flex-1">
-                                    {feature.desc}
-                                </p>
+                            <div className="transform-gpu transition-transform duration-300 will-change-transform group-hover:-rotate-2">
+                                <div className="flex flex-col h-full gap-3 min-h-0">
+                                    <div className="flex items-start gap-4">
+                                        <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-emerald-50 flex items-center justify-center shadow-inner border-2 border-black">
+                                            <FeatureIcon id={feature.id} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-1">
+                                                {feature.title}
+                                            </p>
+                                            <h3 className="text-lg font-bold text-slate-900 mb-2">
+                                                {feature.title}
+                                            </h3>
+                                        </div>
+                                    </div>
 
-                                <div className="mt-3">
-                                    <span className="text-sm font-medium text-slate-500 group-hover:text-emerald-700 transition-colors">
-                                        Learn more
-                                    </span>
+                                    <p className="mt-2 text-sm text-slate-600 leading-relaxed flex-1">
+                                        {feature.desc}
+                                    </p>
+
+                                    <div className="mt-3">
+                                        <span className="text-sm font-medium text-slate-500 group-hover:text-emerald-700 transition-colors">
+                                            Learn more
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -203,7 +205,7 @@ export default function FeaturesGrid() {
             {/* Bottom spacing */}
             <div className="h-16 md:h-20" />
 
-            {/* IMAGE-1 with Pop-Up Animation */}
+            {/* IMAGE-1 – FULL WIDTH & LARGE ON MOBILE */}
             <div
                 ref={imageRef}
                 className={`
@@ -215,7 +217,30 @@ export default function FeaturesGrid() {
                     transitionDelay: "100ms",
                 }}
             >
-                <div className="w-full max-w-7xl rounded-lg shadow-md overflow-hidden">
+                {/* ---------- MOBILE: Full-screen width ---------- */}
+                <div className="block md:hidden w-screen -mx-4 sm:-mx-6">
+                    <div className="px-4 sm:px-6">
+                        <div className="rounded-xl shadow-lg overflow-hidden">
+                            <Image
+                                src="/IMAGE-1.png"
+                                alt="Collaboration features illustration"
+                                width={1600}
+                                height={900}
+                                className="w-full h-auto object-cover max-h-[65vh]"
+                                style={{
+                                    animation: imageVisible
+                                        ? "popBounce 0.6s ease-out forwards"
+                                        : "none",
+                                }}
+                                unoptimized
+                                priority
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* ---------- DESKTOP: Original centered version ---------- */}
+                <div className="hidden md:block w-full max-w-7xl rounded-lg shadow-md overflow-hidden">
                     <Image
                         src="/IMAGE-1.png"
                         alt="Collaboration features illustration"
@@ -223,7 +248,9 @@ export default function FeaturesGrid() {
                         height={900}
                         className="w-full h-auto object-cover block"
                         style={{
-                            animation: imageVisible ? "popBounce 0.6s ease-out forwards" : "none",
+                            animation: imageVisible
+                                ? "popBounce 0.6s ease-out forwards"
+                                : "none",
                         }}
                         unoptimized
                     />
@@ -269,7 +296,7 @@ const style = `
 
 /* Inject CSS */
 if (typeof document !== "undefined") {
-  const styleEl = document.createElement("style");
-  styleEl.textContent = style;
-  document.head.appendChild(styleEl);
+    const styleEl = document.createElement("style");
+    styleEl.textContent = style;
+    document.head.appendChild(styleEl);
 }

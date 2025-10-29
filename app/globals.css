@@ -13,8 +13,8 @@
   --accent-3: #c59cff; /* pastel purple */
   --ink: #0f172a; /* primary text */
   --muted: oklch(0.97 0 0);
-  --card-border: #ffeecc;
-  --card-shadow-color: rgba(15,23,42,0.06);
+  --card-border: #0f5132; /* dark emerald */
+  --card-shadow-color: rgba(15,81,50,0.08);
   --radius: 0.625rem;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);

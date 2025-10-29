@@ -72,14 +72,6 @@ export default function Navbar() {
                 </span>
               </Link>
             </li>
-            <li>
-              <Link href="/messages" className="relative group inline-block">
-                <span className="absolute inset-0 bg-black transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                <span className="relative z-10 flex items-center gap-2 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">
-                  <NavbarIcons.messages className="w-5 h-5" /> Messaging
-                </span>
-              </Link>
-            </li>
 
             {/* Teacher dashboard link (visible when server role indicates teacher) */}
             {role === 'teacher' && (
@@ -179,7 +171,6 @@ export default function Navbar() {
               <li><Link href="/" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white flex items-center gap-2"><NavbarIcons.home className="w-5 h-5" /> Home</Link></li>
               <li><Link href="/courses" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white flex items-center gap-2"><NavbarIcons.courses className="w-5 h-5" /> Courses</Link></li>
               <li><Link href="/mentors" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white flex items-center gap-2"><NavbarIcons.mentors className="w-5 h-5" /> Mentors</Link></li>
-              <li><Link href="/messages" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white flex items-center gap-2"><NavbarIcons.messages className="w-5 h-5" /> Messaging</Link></li>
               {role === 'teacher' && (
                 <>
                   <li><Link href="/teacher/dashboard" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-emerald-500 hover:text-white whitespace-nowrap no-underline hover:no-underline flex items-center gap-2"><NavbarIcons.teacherDashboard className="w-5 h-5" /> teacher-dashboard</Link></li>
