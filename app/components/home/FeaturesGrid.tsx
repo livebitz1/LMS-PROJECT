@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { BookOpen, FileText, MessageSquare, Clipboard } from "lucide-react";
 
 const FEATURES = [
     {
@@ -150,58 +151,53 @@ export default function FeaturesGrid() {
                 ))}
             </div>
 
-            {/* Mobile: Stacked Cards */}
-            <div className="md:hidden space-y-6">
-                {FEATURES.map((feature, idx) => (
-                    <div
-                        key={feature.id}
-                        className={`
-              group p-6 rounded-2xl bg-white border border-gray-100 shadow-sm
-              transition-all duration-700 ease-out
-              ${isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}
-            `}
-                        style={{ transitionDelay: `${100 + idx * 100}ms` }}
-                    >
-                        <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-emerald-50 flex items-center justify-center shadow-inner">
-                                <FeatureIcon id={feature.id} />
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-1">
-                                    {feature.title}
-                                </p>
-                                <h3 className="text-lg font-bold text-slate-900 mb-2">
-                                    {feature.title}
-                                </h3>
-                                <p className="text-sm text-slate-600 leading-relaxed">
+            {/* Mobile: Horizontal scrollable square cards */}
+            <div className="md:hidden">
+                <div
+                    className="flex gap-4 overflow-x-auto py-4 px-4 -mx-4"
+                    style={{ WebkitOverflowScrolling: "touch" }}
+                    aria-label="Features carousel"
+                >
+                    {FEATURES.map((feature, idx) => (
+                        <div
+                            key={feature.id}
+                            className={`
+                                snap-start flex-shrink-0 w-64 sm:w-72 aspect-square 
+                                p-5 sm:p-6 rounded-2xl bg-white border border-gray-100 shadow-sm
+                                flex flex-col
+                                transition-all duration-700 ease-out
+                                ${isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}
+                            `}
+                            style={{ transitionDelay: `${100 + idx * 80}ms` }}
+                        >
+                            <div className="flex flex-col h-full">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center shadow-inner">
+                                        <FeatureIcon id={feature.id} className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-1">
+                                            {feature.title}
+                                        </p>
+                                        <h3 className="text-lg font-bold text-slate-900 mb-2">
+                                            {feature.title}
+                                        </h3>
+                                    </div>
+                                </div>
+
+                                <p className="mt-2 text-sm text-slate-600 leading-relaxed flex-1">
                                     {feature.desc}
                                 </p>
-                            </div>
-                        </div>
 
-                        <div className="mt-5 flex items-center">
-                            <span className="text-sm font-medium text-slate-500 group-hover:text-emerald-700 transition-colors">
-                                Learn more
-                            </span>
-                            <div className="ml-3 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-110 transition-all duration-300">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="14"
-                                    height="14"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <line x1="5" y1="12" x2="19" y2="12" />
-                                    <polyline points="12 5 19 12 12 19" />
-                                </svg>
+                                <div className="mt-3">
+                                    <span className="text-sm font-medium text-slate-500 group-hover:text-emerald-700 transition-colors">
+                                        Learn more
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
 
             {/* Bottom spacing */}
@@ -238,57 +234,15 @@ export default function FeaturesGrid() {
 }
 
 /* ========================================
-   Minimal Icon Set
+   Minimal Icon Set (with className support)
    ======================================== */
-function FeatureIcon({ id }: { id: string }) {
+function FeatureIcon({ id, className }: { id: string; className?: string }) {
+    const defaultClass = className || "w-5 h-5";
     const icons: Record<string, React.ReactElement> = {
-        courses: (
-            <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-            >
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            </svg>
-        ),
-        assignments: (
-            <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-            >
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-            </svg>
-        ),
-        messaging: (
-            <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-            >
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-        ),
-        gradebook: (
-            <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-            >
-                <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
-                <path d="M12 6v6l4 2" />
-            </svg>
-        ),
+        courses: <BookOpen className={defaultClass} />,
+        assignments: <FileText className={defaultClass} />,
+        messaging: <MessageSquare className={defaultClass} />,
+        gradebook: <Clipboard className={defaultClass} />,
     };
 
     return icons[id] || null;
