@@ -48,19 +48,18 @@ export default function AudienceCards() {
 
       {/* Responsive Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-        {/* Teacher Card - Hover Only */}
+        {/* Teacher Card - Slide from Left */}
         <article
           className={`
-            group relative p-8 rounded-3xl bg-white border border-transparent
-            shadow-sm transition-all duration-300 ease-out
-            hover:shadow-lg hover:-translate-y-2
-            will-change-transform overflow-hidden
+            group relative p-8 rounded-3xl bg-white border border-emerald-700 md:border-gray-100 shadow-sm
+            hover:shadow-xl transition-all duration-300 hover:-translate-y-1
+            focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2
             ${isVisible ? "translate-x-0 opacity-100" : "-translate-x-24 opacity-0"}
           `}
           tabIndex={0}
           style={{
-            transition: "transform 300ms ease-out, opacity 800ms ease-out",
-            transitionDelay: isVisible ? "300ms" : "0ms",
+            transition: "transform 800ms ease-out, opacity 800ms ease-out",
+            transitionDelay: "300ms",
           }}
         >
           {/* Animated Border */}
@@ -100,19 +99,18 @@ export default function AudienceCards() {
           </div>
         </article>
 
-        {/* Student Card - Hover Only */}
+        {/* Student Card - Slide from Right */}
         <article
           className={`
-            group relative p-8 rounded-3xl bg-white border border-transparent
-            shadow-sm transition-all duration-300 ease-out
-            hover:shadow-lg hover:-translate-y-2
-            will-change-transform overflow-hidden
+            group relative p-8 rounded-3xl bg-white border border-purple-700 md:border-gray-100 shadow-sm
+            hover:shadow-xl transition-all duration-300 hover:-translate-y-1
+            focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2
             ${isVisible ? "translate-x-0 opacity-100" : "translate-x-24 opacity-0"}
           `}
           tabIndex={0}
           style={{
-            transition: "transform 300ms ease-out, opacity 800ms ease-out",
-            transitionDelay: isVisible ? "400ms" : "0ms",
+            transition: "transform 800ms ease-out, opacity 800ms ease-out",
+            transitionDelay: "400ms",
           }}
         >
           {/* Animated Border */}

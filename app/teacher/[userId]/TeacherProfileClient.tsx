@@ -33,7 +33,7 @@ export default function TeacherProfileClient({ profile }: { profile: ProfileSeri
   const name = profile.displayName || profile.user?.name || `${profile.user?.firstName || ''} ${profile.user?.lastName || ''}`.trim() || profile.user?.email;
 
   return (
-    <main className="max-w-4xl mx-auto px-6 py-12">
+    <main className="max-w-4xl mx-auto px-6 pt-28 md:pt-24 pb-12">
       <div className="mb-6">
         <Link href="/mentors" className="text-sm text-emerald-600 underline">&larr; Back to Mentors</Link>
       </div>

@@ -97,7 +97,7 @@ export default async function TeacherDashboardPage() {
   return (
     <>
       <Navbar />
-      <main className="max-w-4xl mx-auto px-6 py-12">
+      <main className="max-w-4xl mx-auto px-6 pt-28 md:pt-24 pb-12">
         <h1 className="text-3xl font-bold mb-4">Teacher Dashboard</h1>
         <p className="text-sm text-muted-foreground mb-6">Manage your professional profile — this section is only for teachers.</p>
 

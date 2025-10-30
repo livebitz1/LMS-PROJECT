@@ -84,7 +84,7 @@ export default function PopularSubjects() {
             <article
               key={idx}
               className={`
-                group snap-center flex-shrink-0 w-[300px] h-[320px] bg-white rounded-xl border border-black shadow-sm flex flex-col
+                group snap-center flex-shrink-0 w-[300px] h-[320px] bg-white rounded-xl border-2 border-emerald-900 shadow-sm flex flex-col
                 transition-all duration-700 ease-out
                 ${isVisible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}
               `}

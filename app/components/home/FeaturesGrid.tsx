@@ -220,7 +220,7 @@ export default function FeaturesGrid() {
                 {/* ---------- MOBILE: Full-screen width ---------- */}
                 <div className="block md:hidden w-screen -mx-4 sm:-mx-6">
                     <div className="px-4 sm:px-6">
-                        <div className="rounded-xl shadow-lg overflow-hidden">
+                        <div className="rounded-xl shadow-lg overflow-hidden border-4 border-emerald-900">
                             <Image
                                 src="/IMAGE-1.png"
                                 alt="Collaboration features illustration"
@@ -240,7 +240,7 @@ export default function FeaturesGrid() {
                 </div>
 
                 {/* ---------- DESKTOP: Original centered version ---------- */}
-                <div className="hidden md:block w-full max-w-7xl rounded-lg shadow-md overflow-hidden">
+                <div className="hidden md:block w-full max-w-7xl rounded-lg shadow-md overflow-hidden border-4 border-emerald-900">
                     <Image
                         src="/IMAGE-1.png"
                         alt="Collaboration features illustration"

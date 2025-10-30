@@ -151,7 +151,7 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
           const displayName = p.displayName || p.user?.name || `${p.user?.firstName || ''} ${p.user?.lastName || ''}`.trim() || p.user?.email;
 
           return (
-            <Card key={p.id} className="relative border border-emerald-100 shadow-lg bg-white/90 rounded-3xl transition-transform sm:hover:-translate-y-2 sm:hover:shadow-2xl overflow-hidden flex flex-col h-72 sm:h-80 md:h-96">
+            <Card key={p.id} className="relative group border-2 border-emerald-900 shadow-lg bg-white/90 rounded-3xl transition-all sm:hover:-translate-y-2 sm:hover:shadow-2xl overflow-hidden group-hover:overflow-visible flex flex-col h-72 sm:h-80 md:h-96">
               <CardHeader className="relative flex items-start gap-4 pb-2">
                 <Avatar>
                   <AvatarImage src={p.profileImageUrl || (p.user?.clerkId ? `/api/teacher/avatar/${p.user.clerkId}` : undefined)} alt={displayName} />
@@ -231,20 +231,46 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
                   {subjects.length > 0 && (
                     <>
                       {/* Mobile / small screens: horizontal scroll */}
-                      <div className="md:hidden overflow-x-auto pb-2 -mx-2 px-2" aria-label="Specializations">
+                      <div className="md:hidden overflow-x-auto pb-2 -mx-2 px-2 relative z-30" aria-label="Specializations">
                         <div className="flex gap-2 w-max">
-                          {subjects.slice(0, 12).map((s) => (
-                            <span key={s} className="flex-shrink-0 text-xs text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 font-medium shadow-sm">{s}</span>
-                          ))}
+                          {subjects.slice(0, 12).map((s) => {
+                            const selected = subjectFilter === s;
+                            return (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setSubjectFilter(selected ? null : s); }}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setSubjectFilter(selected ? null : s); } }}
+                                aria-pressed={selected}
+                                title={`Filter by ${s}`}
+                                className={`flex-shrink-0 text-xs px-3 py-1 rounded-full border-2 font-medium shadow-sm transition-transform duration-200 ease-out transform-gpu focus:outline-none focus:ring-2 focus:ring-emerald-200 ${selected ? 'bg-emerald-900 text-white border-emerald-900 shadow-lg' : 'text-emerald-700 bg-emerald-50 border-emerald-100 hover:border-emerald-900 hover:shadow-lg hover:bg-emerald-100 hover:text-emerald-900 hover:scale-105 hover:-translate-y-1'}`}
+                              >
+                                {s}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
 
                       {/* Desktop / larger screens: vertical scroll inside a constrained area */}
-                      <div className="hidden md:block overflow-y-auto max-h-[7.5rem] pr-2 scrollbar-thin scrollbar-thumb-emerald-200" aria-label="Specializations">
+                      <div className="hidden md:block overflow-y-auto max-h-[7.5rem] pr-2 scrollbar-thin scrollbar-thumb-emerald-200 relative z-30" aria-label="Specializations">
                         <div className="flex flex-wrap gap-2">
-                          {subjects.slice(0, 12).map((s) => (
-                            <span key={s} className="text-xs text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 font-medium shadow-sm">{s}</span>
-                          ))}
+                          {subjects.slice(0, 12).map((s) => {
+                            const selected = subjectFilter === s;
+                            return (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setSubjectFilter(selected ? null : s); }}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setSubjectFilter(selected ? null : s); } }}
+                                aria-pressed={selected}
+                                title={`Filter by ${s}`}
+                                className={`text-xs px-3 py-1 rounded-full border-2 font-medium shadow-sm transition-transform duration-150 ease-out transform-gpu focus:outline-none focus:ring-2 focus:ring-emerald-200 ${selected ? 'bg-emerald-900 text-white border-emerald-900 shadow-lg' : 'text-emerald-700 bg-emerald-50 border-emerald-100 hover:border-emerald-900 hover:shadow-md hover:bg-emerald-100 hover:text-emerald-900'}`}
+                              >
+                                {s}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     </>
