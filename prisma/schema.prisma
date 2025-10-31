@@ -59,6 +59,11 @@ model TeacherProfile {
   updatedAt       DateTime @updatedAt
   displayName     String?
   hourlyRate      Float?
+  // Document URLs stored after upload to Cloudinary
+  resumeUrl       String?
+  idCardUrl       String?
+  degreeProofUrl  String?
+  docsStatus      String?
   user            User     @relation(fields: [userId], references: [id])
 }
 

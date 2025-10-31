@@ -243,6 +243,15 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
     }
   };
 
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [idCardFile, setIdCardFile] = useState<File | null>(null);
+  const [degreeFile, setDegreeFile] = useState<File | null>(null);
+  const [uploadingDocs, setUploadingDocs] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+
+  // helper to preview image if needed
+  const urlFromFile = (f: File | null) => (f ? URL.createObjectURL(f) : null);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -386,6 +395,65 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
         ) : (
           <p className="mt-2 text-xs text-slate-500">Choose one or more from the list. Adding custom specializations is not allowed.</p>
         )}
+      </div>
+
+      <div>
+        <label className="block mb-2 text-sm font-medium">Required documents (Resume, Aadhaar, Degree)</label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs mb-1">Resume (PDF/DOCX) — required</label>
+            <input type="file" accept=".pdf,.doc,.docx" onChange={(e)=>setResumeFile(e.target.files?.[0] ?? null)} />
+            {resumeFile && <div className="mt-1 text-xs text-slate-600">Selected: {resumeFile.name}</div>}
+          </div>
+
+          <div>
+            <label className="block text-xs mb-1">Aadhaar (image) — required</label>
+            <input type="file" accept="image/*" onChange={(e)=>setIdCardFile(e.target.files?.[0] ?? null)} />
+            {idCardFile && <div className="mt-1"><img src={urlFromFile(idCardFile)!} alt="aadhaar preview" className="w-24 h-24 object-cover rounded-md" /></div>}
+          </div>
+
+          <div>
+            <label className="block text-xs mb-1">Degree proof (PDF/image) — required</label>
+            <input type="file" accept=".pdf,image/*" onChange={(e)=>setDegreeFile(e.target.files?.[0] ?? null)} />
+            {degreeFile && <div className="mt-1 text-xs text-slate-600">Selected: {degreeFile.name}</div>}
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center gap-2">
+          <Button onClick={async ()=>{
+            setUploadMessage(null);
+            // validate before upload
+            const typesDoc = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            const typesImage = ['image/jpeg','image/png','image/webp'];
+            if (!resumeFile || !idCardFile || !degreeFile) { setUploadMessage('Please select all three required files'); return; }
+            if (!typesDoc.includes(resumeFile.type)) { setUploadMessage('Resume must be a PDF or Word document'); return; }
+            if (!typesImage.includes(idCardFile.type)) { setUploadMessage('Aadhaar must be an image (jpeg/png/webp)'); return; }
+            if (![...typesImage, 'application/pdf'].includes(degreeFile.type)) { setUploadMessage('Degree must be PDF or image'); return; }
+
+            setUploadingDocs(true);
+            try {
+              const fd = new FormData();
+              fd.append('resume', resumeFile as File);
+              fd.append('idCard', idCardFile as File);
+              fd.append('degree', degreeFile as File);
+              const res = await fetch('/api/teacher/docs', { method: 'POST', body: fd });
+              const json = await res.json();
+              if (!res.ok) throw new Error(json?.error ?? 'Upload failed');
+              setUploadMessage('Uploaded successfully and pending verification');
+              // refresh profile (server state) so uploaded URLs show
+              router.refresh();
+              setResumeFile(null);
+              setIdCardFile(null);
+              setDegreeFile(null);
+            } catch (err) {
+              setUploadMessage(String((err as Error)?.message ?? err));
+            } finally { setUploadingDocs(false); }
+          }} disabled={uploadingDocs}>
+            {uploadingDocs ? 'Uploading...' : 'Upload documents'}
+          </Button>
+
+          <div className="text-sm text-slate-600">{uploadMessage}</div>
+        </div>
       </div>
 
       <div className="flex gap-2 items-center">

@@ -17,24 +17,25 @@ export default async function MentorsPage() {
 
   try {
     const tpUnknown = (prisma as unknown as { teacherProfile?: unknown }).teacherProfile;
-    const tp = tpUnknown as { findMany?: (args: { include: { user: true }, orderBy: { createdAt: 'desc' } }) => Promise<Profile[]> } | undefined;
+    const tp = tpUnknown as { findMany?: (args: { where?: unknown; include: { user: true }, orderBy: { createdAt: 'desc' } }) => Promise<Profile[]> } | undefined;
 
+    // Only fetch profiles that have been approved by admin (docsStatus = 'VERIFIED')
     if (tp && typeof tp.findMany === 'function') {
-      profiles = await tp.findMany({ include: { user: true }, orderBy: { createdAt: 'desc' } });
-      profiles = profiles.map((p) => ({
-        ...p,
-        subjects: Array.isArray(p.subjects)
-          ? p.subjects.filter((s: unknown): s is string => typeof s === 'string')
-          : typeof p.subjects === 'string'
-            ? (p.subjects as string).split(',').map((s: string) => s.trim()).filter(Boolean)
-            : [],
-      }));
+      profiles = await tp.findMany({ where: { docsStatus: 'VERIFIED' }, include: { user: true }, orderBy: { createdAt: 'desc' } });
+      profiles = profiles.map((p) => {
+        const subjects = p.subjects;
+        const parsedSubjects = Array.isArray(subjects)
+          ? subjects.filter((s: unknown): s is string => typeof s === 'string')
+          : (typeof subjects === 'string' ? (subjects as string).split(',').map((s: string) => s.trim()).filter(Boolean) : []);
+        return { ...p, subjects: parsedSubjects };
+      });
     } else {
       // fallback to raw SQL join if Prisma delegate isn't available (robust for mismatched client)
       const rows = (await prisma.$queryRaw`SELECT tp.id, tp."userId", tp."displayName", tp."hourlyRate", tp.bio, tp.degree, tp."experienceYears", tp.subjects, tp.linkedin, tp."profileImageUrl", tp."createdAt", tp."updatedAt",
                u."clerkId", u.email, u.name, u."firstName", u."lastName", u."profileImageUrl" as "userProfileImageUrl", u.role as "userRole", u."createdAt" as "userCreatedAt"
         FROM "TeacherProfile" tp
         JOIN "User" u ON tp."userId" = u.id
+        WHERE tp."docsStatus" = 'VERIFIED'
         ORDER BY tp."createdAt" DESC
       `) as unknown[];
       profiles = (rows || []).map((r): Profile => {
