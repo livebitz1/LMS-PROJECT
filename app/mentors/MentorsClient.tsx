@@ -47,6 +47,15 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
   const [favLoadingId, setFavLoadingId] = useState<string | null>(null);
   const bookingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [bookingTeacherId, setBookingTeacherId] = useState<string | null>(null);
+  const [bookingTeacherName, setBookingTeacherName] = useState<string | null>(null);
+  const [bookingDate, setBookingDate] = useState('');
+  const [bookingTime, setBookingTime] = useState('');
+  const [bookingNote, setBookingNote] = useState('');
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+
   useEffect(() => {
     (async () => {
       try {
@@ -111,6 +120,53 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
     if (subjectFilter) return subjectFilter;
     return null;
   }, [subjectFilter]);
+
+  function openBookingModal(teacherId: string, teacherName?: string) {
+    setBookingTeacherId(teacherId);
+    setBookingTeacherName(teacherName ?? null);
+    setBookingDate('');
+    setBookingTime('');
+    setBookingNote('');
+    setBookingError(null);
+    setBookingModalOpen(true);
+  }
+
+  async function submitBookingFromModal() {
+    if (!bookingTeacherId || !userInfo) return;
+    if (!bookingDate || !bookingTime) { setBookingError('Please pick date and time'); return; }
+    const iso = new Date(`${bookingDate}T${bookingTime}`);
+    if (isNaN(iso.getTime())) { setBookingError('Invalid date/time'); return; }
+    setBookingSubmitting(true);
+    setBookingError(null);
+    try {
+      const res = await fetch('/api/teacher/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teacherId: bookingTeacherId,
+          studentId: userInfo.id,
+          studentName: userInfo.name || userInfo.firstName || userInfo.email,
+          studentEmail: userInfo.email,
+          message: bookingNote || '',
+          timeRequested: iso.toISOString(),
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.error || 'Booking failed');
+      }
+      // success: close modal and show minimal feedback
+      setBookingModalOpen(false);
+      setBookingSubmitting(false);
+      // briefly show animation on the original button
+      setBookingLoading(bookingTeacherId);
+      if (bookingTimeoutRef.current) clearTimeout(bookingTimeoutRef.current);
+      bookingTimeoutRef.current = setTimeout(() => setBookingLoading(null), 1200);
+    } catch (err) {
+      setBookingError(String((err as Error)?.message ?? err));
+      setBookingSubmitting(false);
+    }
+  }
 
   return (
     <div>
@@ -302,36 +358,7 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
                         variant={bookingLoading === p.userId ? "secondary" : "default"}
                         size="sm"
                         className={`rounded-full px-3 py-1.5 flex items-center gap-2 bg-emerald-600 text-white hover:bg-emerald-700 transition relative overflow-hidden ${bookingLoading === p.userId ? 'pointer-events-none' : ''}`}
-                        onClick={async () => {
-                          if (!userInfo) return;
-                          setBookingLoading(p.userId);
-                          try {
-                            const res = await fetch('/api/teacher/book', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({
-                                teacherId: p.userId,
-                                studentId: userInfo.id,
-                                studentName: userInfo.name || userInfo.firstName || userInfo.email,
-                                studentEmail: userInfo.email,
-                                message: '', // can add a modal for message later
-                              }),
-                            });
-                            if (!res.ok) throw new Error('Booking failed');
-                          } catch {
-                            alert('Booking failed. Please try again.');
-                          }
-                          setBookingLoading(null);
-                          // Show minimal animation
-                          if (bookingTimeoutRef.current) clearTimeout(bookingTimeoutRef.current);
-                          const btn = document.getElementById(`book-btn-${p.userId}`);
-                          if (btn) {
-                            btn.classList.add('booked-success');
-                            bookingTimeoutRef.current = setTimeout(() => {
-                              btn.classList.remove('booked-success');
-                            }, 1200);
-                          }
-                        }}
+                        onClick={() => openBookingModal(p.userId, displayName)}
                         id={`book-btn-${p.userId}`}
                       >
                         {bookingLoading === p.userId ? (
@@ -360,6 +387,36 @@ export default function MentorsClient({ profiles }: { profiles: Profile[] }) {
           );
         })}
       </div>
+
+      {/* Booking modal */}
+      {bookingModalOpen && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40" onClick={() => { if (!bookingSubmitting) setBookingModalOpen(false); }} />
+          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6 z-50">
+            <h3 className="text-lg font-semibold mb-2">Book a session{bookingTeacherName ? ` with ${bookingTeacherName}` : ''}</h3>
+            <p className="text-sm text-slate-600 mb-4">Select a preferred date and time. The teacher will confirm or propose a different time.</p>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <label className="flex flex-col text-sm">
+                <span className="text-xs text-slate-600 mb-1">Date</span>
+                <input type="date" value={bookingDate} onChange={(e) => setBookingDate(e.target.value)} className="px-3 py-2 border rounded" />
+              </label>
+              <label className="flex flex-col text-sm">
+                <span className="text-xs text-slate-600 mb-1">Time</span>
+                <input type="time" value={bookingTime} onChange={(e) => setBookingTime(e.target.value)} className="px-3 py-2 border rounded" />
+              </label>
+            </div>
+            <label className="block mb-3 text-sm">
+              <span className="text-xs text-slate-600 mb-1">Note (optional)</span>
+              <textarea value={bookingNote} onChange={(e) => setBookingNote(e.target.value)} rows={3} className="w-full px-3 py-2 border rounded" placeholder="Any context or requests for the teacher" />
+            </label>
+            {bookingError && <div className="text-sm text-red-600 mb-2">{bookingError}</div>}
+            <div className="flex items-center justify-end gap-2">
+              <button onClick={() => { if (!bookingSubmitting) setBookingModalOpen(false); }} className="px-3 py-2 rounded border">Cancel</button>
+              <button onClick={submitBookingFromModal} disabled={bookingSubmitting} className="px-4 py-2 rounded bg-emerald-600 text-white">{bookingSubmitting ? 'Submitting...' : 'Request Booking'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

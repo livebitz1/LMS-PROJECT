@@ -1,135 +1,369 @@
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Empty } from '@/components/ui/empty';
-import { useRouter } from 'next/navigation';
-import React, { useRef, useCallback } from 'react';
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Card, CardContent } from "@/components/ui/card"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { useToast } from "@/components/ui/use-toast"
+import {
+  Calendar,
+  Clock,
+  XCircle,
+  CheckCircle2,
+  AlertCircle,
+  Search,
+  Filter,
+  RefreshCw,
+  ChevronDown,
+} from "lucide-react"
 
 export type LearnerBooking = {
-  id: string;
-  teacherId: string;
-  teacherName: string;
-  teacherProfileImageUrl?: string | null;
-  createdAt: string;
-  message?: string | null;
-};
+  id: string
+  teacherId: string
+  teacherName: string
+  teacherProfileImageUrl?: string | null
+  createdAt: string
+  message?: string | null
+}
 
-export function LearnerBookings({ bookings }: { bookings: LearnerBooking[] }) {
-  const router = useRouter();
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+type ParsedMessage = {
+  text: string
+  timeRequested: string | null
+  status: "PENDING" | "ACCEPTED" | "REJECTED"
+}
 
-  const scrollByAmount = useCallback((amount: number) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({ left: amount, behavior: 'smooth' });
-  }, []);
+const parseMessage = (msg?: string | null): ParsedMessage => {
+  if (!msg) return { text: "", timeRequested: null, status: "PENDING" }
+  try {
+    const parsed = JSON.parse(msg)
+    return {
+      text: parsed.text || "",
+      timeRequested: parsed.timeRequested || null,
+      status: (parsed.status || "PENDING").toUpperCase() as ParsedMessage["status"],
+    }
+  } catch {
+    return { text: msg, timeRequested: null, status: "PENDING" }
+  }
+}
 
-  const handlePrev = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    // Scroll by one 'page' (showing up to 3 cards) — use container width
-    scrollByAmount(-el.clientWidth);
-  };
+const formatDate = (date: string | Date) => {
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  })
+}
 
-  const handleNext = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    scrollByAmount(el.clientWidth);
-  };
+export function LearnerBookings({ bookings: initialBookings }: { bookings: LearnerBooking[] }) {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [bookings, setBookings] = useState<LearnerBooking[]>(initialBookings ?? [])
+  const [search, setSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "ACCEPTED" | "REJECTED">("ALL")
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [cancelId, setCancelId] = useState<string | null>(null)
+  const [isCanceling, setIsCanceling] = useState(false)
+
+  const refreshBookings = async () => {
+    try {
+      setIsRefreshing(true)
+      const res = await fetch("/api/learner/bookings", { credentials: "same-origin" })
+      if (!res.ok) throw new Error("Failed to fetch bookings")
+      const data = await res.json()
+      setBookings(data.bookings ?? [])
+      toast({ title: "Success", description: "Bookings updated successfully." })
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: (e as Error).message })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  const handleCancel = async () => {
+    if (!cancelId || isCanceling) return
+    setIsCanceling(true)
+
+    try {
+      const res = await fetch("/api/learner/bookings/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: cancelId }),
+      })
+
+      if (!res.ok) {
+        const err = await res.text()
+        throw new Error(err || "Failed to cancel")
+      }
+
+      setBookings((prev) => prev.filter((b) => b.id !== cancelId))
+      toast({
+        title: "Booking Canceled",
+        description: "Your session has been removed.",
+      })
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Cancellation Failed",
+        description: (e as Error).message || "Please try again.",
+      })
+    } finally {
+      setIsCanceling(false)
+      setCancelId(null)
+    }
+  }
+
+  const openCancelDialog = (id: string) => setCancelId(id)
+
+  const displayed = bookings.filter((b) => {
+    const msg = parseMessage(b.message)
+    const matchesSearch =
+      search.trim() === "" || `${b.teacherName} ${msg.text}`.toLowerCase().includes(search.toLowerCase())
+    const matchesStatus = statusFilter === "ALL" || msg.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
+
+  const statusConfig = {
+    PENDING: {
+      color: "bg-amber-50 text-amber-900 border-amber-200",
+      badgeColor: "bg-amber-100 text-amber-700",
+      icon: AlertCircle,
+      label: "Pending",
+    },
+    ACCEPTED: {
+      color: "bg-emerald-50 text-emerald-900 border-emerald-200",
+      badgeColor: "bg-emerald-100 text-emerald-700",
+      icon: CheckCircle2,
+      label: "Confirmed",
+    },
+    REJECTED: {
+      color: "bg-red-50 text-red-900 border-red-200",
+      badgeColor: "bg-red-100 text-red-700",
+      icon: XCircle,
+      label: "Rejected",
+    },
+  }
 
   return (
-    <Card className="mb-8">
-      <CardHeader>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-emerald-700">Your Booked Teachers</span>
-            <Badge variant="outline" className="text-xs">{bookings.length}</Badge>
+    <>
+      <div className="min-h-screen bg-white">
+        <div className="border-b border-slate-200">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <div className="flex flex-col gap-4">
+              {/* Header title section */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Your Booked Teachers</h1>
+                  <p className="text-sm text-slate-600 mt-1 hidden sm:block">Manage your learning sessions</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <div className="text-lg sm:text-xl font-bold text-emerald-600">{bookings.length}</div>
+                    <div className="text-xs text-slate-500">Booking{bookings.length !== 1 ? "s" : ""}</div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={refreshBookings}
+                    disabled={isRefreshing}
+                    className="gap-1.5 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 transition-colors p-2"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1 min-w-0">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search teacher..."
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border-2 border-transparent rounded-lg focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus:border-emerald-800 transition-all bg-white placeholder-slate-400"
+                    style={{ outline: 'none', boxShadow: 'none' }}
+                  />
+                </div>
+
+                <div className="relative min-w-fit">
+                  <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <select
+                    value={statusFilter}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value as "ALL" | "PENDING" | "ACCEPTED" | "REJECTED")}
+                    className="pl-8 pr-8 py-2.5 text-sm border-2 border-transparent rounded-lg appearance-none bg-white focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus:border-emerald-800 transition-all cursor-pointer font-medium text-slate-700"
+                    style={{ outline: 'none', boxShadow: 'none' }}
+                  >
+                    <option value="ALL">All</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="ACCEPTED">Confirmed</option>
+                    <option value="REJECTED">Rejected</option>
+                  </select>
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
           </div>
-          {bookings.length > 3 && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handlePrev}
-                aria-label="Previous bookings"
-                className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white border border-emerald-100 shadow-sm hover:shadow-md transition"
-              >
-                <svg className="w-4 h-4 text-emerald-700" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={handleNext}
-                aria-label="Next bookings"
-                className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white border border-emerald-100 shadow-sm hover:shadow-md transition"
-              >
-                <svg className="w-4 h-4 text-emerald-700" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
+        </div>
+
+        {/* Main content */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          {bookings.length === 0 ? (
+            <div className="text-center py-16 sm:py-20">
+              <div className="bg-emerald-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-slate-900 mb-1">No Bookings Yet</h3>
+              <p className="text-sm text-slate-600">Start exploring teachers to book your first session.</p>
+            </div>
+          ) : displayed.length === 0 ? (
+            <div className="text-center py-12">
+              <Search className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-600 text-sm">No bookings match your search.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {displayed.map((b) => {
+                const msg = parseMessage(b.message)
+                const statusData = statusConfig[msg.status]
+                const StatusIcon = statusData.icon
+
+                return (
+                  <Card
+                    key={b.id}
+                    className="overflow-hidden bg-white border border-slate-200 hover:border-emerald-300 transition-colors"
+                  >
+                    <CardContent className="p-4 sm:p-5">
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0">
+                          <Avatar className="h-14 w-14 sm:h-16 sm:w-16 ring-2 ring-emerald-100">
+                            <AvatarImage src={b.teacherProfileImageUrl || undefined} alt={b.teacherName} />
+                            <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-bold">
+                              {b.teacherName?.[0]?.toUpperCase() || "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+
+                        {/* Main content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                            <div className="min-w-0">
+                              <h3 className="font-semibold text-slate-900 text-base sm:text-lg truncate">
+                                {b.teacherName}
+                              </h3>
+                              <div className="flex items-center gap-1 text-xs text-slate-600 mt-0.5">
+                                <Calendar className="w-3 h-3" />
+                                <span>
+                                  Booked{" "}
+                                  {new Date(b.createdAt).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold flex-shrink-0 ${statusData.badgeColor}`}
+                            >
+                              <StatusIcon className="w-3.5 h-3.5" />
+                              <span>{statusData.label}</span>
+                            </div>
+                          </div>
+
+                          {/* Message section */}
+                          {msg.text && (
+                            <div className="mb-3">
+                              <p className="text-sm text-slate-700 line-clamp-2">{msg.text}</p>
+                            </div>
+                          )}
+
+                          {/* Time and actions */}
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                            {msg.timeRequested && (
+                              <div className="flex items-center gap-1.5 text-xs text-slate-600 min-w-0">
+                                <Clock className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                                <span className="truncate">{formatDate(msg.timeRequested)}</span>
+                              </div>
+                            )}
+
+                            <div className="flex gap-2 mt-2 sm:mt-0 sm:ml-auto">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => b.teacherId && router.push(`/teacher/${b.teacherId}`)}
+                                disabled={!b.teacherId}
+                                className="flex-1 sm:flex-none text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition-colors"
+                              >
+                                Profile
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => openCancelDialog(b.id)}
+                                disabled={isCanceling}
+                                className="flex-1 sm:flex-none text-xs bg-red-600 hover:bg-red-700"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
           )}
         </div>
-        <Separator className="mt-2" />
-      </CardHeader>
-      <CardContent>
-        {bookings.length === 0 ? (
-          <Empty className="py-12 text-center text-slate-400">No bookings yet.</Empty>
-        ) : (
-          <div className="relative">
-            {/* Horizontal scroll container showing up to 3 items at once. */}
-            <div
-              ref={scrollRef}
-              className="flex gap-6 overflow-x-auto py-2 px-1"
-              style={{
-                // hide vertical scrollbar gap on some browsers
-                WebkitOverflowScrolling: 'touch',
-                scrollBehavior: 'smooth',
-              }}
+      </div>
+
+      <Dialog open={!!cancelId} onOpenChange={(open) => !open && setCancelId(null)}>
+        <DialogContent className="sm:max-w-md rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900">Cancel Booking?</DialogTitle>
+            <DialogDescription className="text-sm text-slate-600 mt-2">
+              Remove your booking with{" "}
+              <span className="font-semibold text-slate-900">
+                {bookings.find((b) => b.id === cancelId)?.teacherName}
+              </span>
+              . This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <Separator className="my-4 bg-slate-200/50" />
+          <DialogFooter className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setCancelId(null)}
+              disabled={isCanceling}
+              className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50"
             >
-              {bookings.map((b) => (
-                <div
-                  key={b.id}
-                  className="flex-shrink-0"
-                  style={{
-                    // Each card takes up roughly 33.333% of the container so three are visible
-                    flex: '0 0 calc(33.333% - 1rem)',
-                    minWidth: '260px',
-                    maxWidth: '420px',
-                  }}
-                >
-                  <Card className="border border-emerald-100 bg-white/80 shadow-sm hover:shadow-lg transition-shadow">
-                    <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                      <Avatar className="size-12">
-                        <AvatarImage src={b.teacherProfileImageUrl || undefined} alt={b.teacherName || 'Teacher'} />
-                        <AvatarFallback>{b.teacherName ? b.teacherName[0] : '?'}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-semibold text-base text-emerald-900">{b.teacherName}</div>
-                        <Badge variant="secondary" className="text-xs">Teacher</Badge>
-                        <button
-                          type="button"
-                          disabled={!b.teacherId}
-                          onClick={() => b.teacherId && router.push(`/teacher/${b.teacherId}`)}
-                          className={`inline-block mt-2 px-3 py-1 text-xs rounded bg-emerald-100 text-emerald-800 font-medium hover:bg-emerald-200 transition-colors${!b.teacherId ? ' opacity-50 cursor-not-allowed' : ''}`}
-                          title={b.teacherId ? `View ${b.teacherName}'s profile` : 'Profile link unavailable'}
-                        >
-                          View Profile
-                        </button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0 pb-2">
-                      {b.message && <div className="text-sm text-slate-700 mb-1">Message: <span className="font-medium text-emerald-700">{b.message}</span></div>}
-                      <div className="text-xs text-slate-400">Booked on {new Date(b.createdAt).toLocaleString()}</div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+              Keep
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancel}
+              disabled={isCanceling}
+              className="flex-1 bg-red-600 hover:bg-red-700"
+            >
+              {isCanceling ? "Canceling..." : "Cancel"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
 }

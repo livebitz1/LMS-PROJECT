@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import Image from 'next/image';
 
 type User = {
   id: string;
@@ -409,7 +410,11 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
           <div>
             <label className="block text-xs mb-1">Aadhaar (image) — required</label>
             <input type="file" accept="image/*" onChange={(e)=>setIdCardFile(e.target.files?.[0] ?? null)} />
-            {idCardFile && <div className="mt-1"><img src={urlFromFile(idCardFile)!} alt="aadhaar preview" className="w-24 h-24 object-cover rounded-md" /></div>}
+            {idCardFile && (
+              <div className="mt-1">
+                <Image src={urlFromFile(idCardFile)!} alt="aadhaar preview" className="w-24 h-24 object-cover rounded-md" width={96} height={96} />
+              </div>
+            )}
           </div>
 
           <div>

@@ -24,6 +24,7 @@ export default function LearnerFavorites({ user }: { user: UserShape }) {
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [bookLoading, setBookLoading] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -82,51 +83,72 @@ export default function LearnerFavorites({ user }: { user: UserShape }) {
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle>Favorite Teachers</CardTitle>
+        <div className="flex items-center justify-between gap-4 w-full">
+          <CardTitle>Favorite Teachers</CardTitle>
+          <div className="w-full max-w-sm">
+            <label className="relative block">
+              <input
+                aria-label="Search favorite teachers"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search favorites..."
+                className="w-full px-3 py-2 border-2 border-transparent rounded-md text-sm transition-colors duration-200 ease-out focus:border-emerald-800 focus-visible:border-emerald-900 focus:outline-none focus-visible:outline-none"
+                style={{ outline: 'none', boxShadow: 'none' }}
+              />
+            </label>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {favorites.length === 0 ? (
           <div className="text-sm text-slate-600">You have no favorite teachers yet. Visit the mentors page to add favorites.</div>
         ) : (
           <div className="flex flex-col gap-3">
-            {favorites.map((f) => {
-              const t = f.teacher ?? {};
-              const displayName = t.displayName || t.name || 'Teacher';
-              return (
-                <div key={f.id} className="flex items-center justify-between gap-4 bg-white border border-emerald-50 rounded-lg p-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Avatar className="w-12 h-12">
-                      {t.profileImageUrl ? (
-                        <AvatarImage src={t.profileImageUrl} alt={displayName} />
-                      ) : (
-                        <AvatarFallback>{(displayName?.[0] || 'T').toUpperCase()}</AvatarFallback>
-                      )}
-                    </Avatar>
-                    <div className="min-w-0">
-                      <Link href={`/teacher/${f.teacherId}`} className="font-medium text-slate-900 truncate">
-                        {displayName}
-                      </Link>
-                      <div className="text-xs text-slate-500 truncate">{t.name}</div>
-                    </div>
-                  </div>
+            {favorites
+              .filter((f) => {
+                if (!query.trim()) return true;
+                const t = f.teacher ?? {};
+                const displayName = (t.displayName || t.name || '').toLowerCase();
+                return displayName.includes(query.trim().toLowerCase());
+              })
+              .map((f) => {
+               const t = f.teacher ?? {};
+               const displayName = t.displayName || t.name || 'Teacher';
+               return (
+                 <div key={f.id} className="flex items-center justify-between gap-4 bg-white border border-emerald-50 rounded-lg p-3">
+                   <div className="flex items-center gap-3 min-w-0">
+                     <Avatar className="w-12 h-12">
+                       {t.profileImageUrl ? (
+                         <AvatarImage src={t.profileImageUrl} alt={displayName} />
+                       ) : (
+                         <AvatarFallback>{(displayName?.[0] || 'T').toUpperCase()}</AvatarFallback>
+                       )}
+                     </Avatar>
+                     <div className="min-w-0">
+                       <Link href={`/teacher/${f.teacherId}`} className="font-medium text-slate-900 truncate">
+                         {displayName}
+                       </Link>
+                       <div className="text-xs text-slate-500 truncate">{t.name}</div>
+                     </div>
+                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Link href={`/teacher/${f.teacherId}`}>
-                      <Button variant="outline" size="sm" className="rounded-full px-3 py-1.5">View</Button>
-                    </Link>
-                    <Button size="sm" className="rounded-full px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => handleBook(f.teacherId)} disabled={bookLoading === f.teacherId}>
-                      {bookLoading === f.teacherId ? 'Booking...' : 'Book'}
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-      <CardFooter>
-        <div className="text-xs text-slate-500">Your favorite teachers are saved to your account</div>
-      </CardFooter>
-    </Card>
-  );
-}
+                   <div className="flex items-center gap-2">
+                     <Link href={`/teacher/${f.teacherId}`}>
+                       <Button variant="outline" size="sm" className="rounded-full px-3 py-1.5">View</Button>
+                     </Link>
+                     <Button size="sm" className="rounded-full px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => handleBook(f.teacherId)} disabled={bookLoading === f.teacherId}>
+                       {bookLoading === f.teacherId ? 'Booking...' : 'Book'}
+                     </Button>
+                   </div>
+                 </div>
+               );
+             })}
+           </div>
+         )}
+       </CardContent>
+       <CardFooter>
+         <div className="text-xs text-slate-500">Your favorite teachers are saved to your account</div>
+       </CardFooter>
+     </Card>
+   );
+ }

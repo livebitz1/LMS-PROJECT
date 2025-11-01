@@ -45,7 +45,7 @@ const GetStartedButton = () => {
     } catch (err) {
       console.error('GetStarted click error', err);
       // attempt fallback navigation
-      try { await router.push('/'); } catch (_) { /* ignore */ }
+      try { await router.push('/'); } catch { /* ignore */ }
     } finally {
       clearTimeout(safety);
       setLoading(false);
@@ -53,7 +53,7 @@ const GetStartedButton = () => {
       // set a small delay to allow provider to observe new pathname and hide overlay
       setTimeout(() => { try { setGlobalLoading(false); } catch {} }, 12000);
     }
-  }, [isSignedIn, clerk, router]);
+  }, [isSignedIn, clerk, router, setGlobalLoading]);
 
   return (
     <StyledWrapper>

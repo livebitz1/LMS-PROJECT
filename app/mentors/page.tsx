@@ -96,7 +96,6 @@ export default async function MentorsPage() {
     // If Prisma cannot connect (build/time or runtime), log the error and continue with an empty list
     // This prevents the entire page from crashing when the DATABASE is unreachable.
     // In production you might surface a friendly message or fallback to client-side fetching.
-    // eslint-disable-next-line no-console
     console.error('MentorsPage: failed to fetch teacher profiles, falling back to empty list', err);
     profiles = [];
   }

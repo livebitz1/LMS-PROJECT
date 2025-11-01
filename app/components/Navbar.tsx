@@ -57,14 +57,6 @@ export default function Navbar() {
               </Link>
             </li>
             <li>
-              <Link href="/courses" className="relative group inline-block">
-                <span className="absolute inset-0 bg-black transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
-                <span className="relative z-10 flex items-center gap-2 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">
-                  <NavbarIcons.courses className="w-5 h-5" /> Courses
-                </span>
-              </Link>
-            </li>
-            <li>
               <Link href="/mentors" className="relative group inline-block">
                 <span className="absolute inset-0 bg-black transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-200 rounded-md" aria-hidden />
                 <span className="relative z-10 flex items-center gap-2 px-2 py-1 text-slate-800 group-hover:text-white transition-colors">
@@ -169,7 +161,6 @@ export default function Navbar() {
           <div className="max-w-7xl mx-auto px-6 py-4">
             <ul className="flex flex-col gap-3">
               <li><Link href="/" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white flex items-center gap-2"><NavbarIcons.home className="w-5 h-5" /> Home</Link></li>
-              <li><Link href="/courses" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white flex items-center gap-2"><NavbarIcons.courses className="w-5 h-5" /> Courses</Link></li>
               <li><Link href="/mentors" className="block px-3 py-2 rounded-md text-slate-800 hover:bg-black hover:text-white flex items-center gap-2"><NavbarIcons.mentors className="w-5 h-5" /> Mentors</Link></li>
               {role === 'teacher' && (
                 <>

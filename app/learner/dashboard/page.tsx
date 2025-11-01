@@ -39,6 +39,8 @@ export default function LearnerDashboard() {
   return (
     <>
       <Navbar />
+      {/* spacer equal to header height so fixed navbar doesn't overlap content */}
+      <div className="h-20" aria-hidden />
       <div className="max-w-3xl mx-auto py-10 px-4">
         <LearnerProfileCard user={user} />
         <LearnerBookings bookings={bookings} />

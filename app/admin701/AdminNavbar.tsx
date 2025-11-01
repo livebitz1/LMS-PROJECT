@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 type TeacherProfile = {
@@ -252,12 +253,12 @@ export default function AdminNavbar() {
             // trigger teachers reload
             fetch('/api/admin/teachers').then((r) => r.json()).then((j) => { if (j && j.teachers) setTeachers(j.teachers); }).catch(() => {});
           }
-        } catch (e) {}
+        } catch {}
       });
       es.addEventListener('error', () => {
         // reconnect logic could be added here
       });
-    } catch (e) {}
+    } catch {}
 
     return () => { cancelled = true; if (approvalsEventRef.current) { approvalsEventRef.current.close(); approvalsEventRef.current = null; } };
   }, [tab]);
@@ -293,27 +294,6 @@ export default function AdminNavbar() {
       }
     } catch (err) {
       alert('Action failed: ' + String((err as Error)?.message ?? err));
-    }
-  }
-
-  async function handleRemoveTeacher(profileId?: string) {
-    if (!profileId) return alert('No profile id');
-    if (!confirm('Are you sure you want to remove this teacher? This will hide the profile from the mentors page.')) return;
-    try {
-      const res = await fetch('/api/admin/approvals/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileId, action: 'remove' }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error ?? 'Remove failed');
-      // remove locally
-      setTeachers((prev) => prev.filter((t) => (t.teacherProfile?.id ?? '') !== profileId));
-      // also remove from approvals if present
-      setApprovals((prev) => prev.filter((a) => a.id !== profileId));
-      // server emits approval_changed event which will trigger other listeners
-    } catch (err) {
-      alert('Remove failed: ' + String((err as Error)?.message ?? err));
     }
   }
 
@@ -414,10 +394,10 @@ export default function AdminNavbar() {
                             <tr key={t.id} className="border-t bg-white">
                               <td className="px-4 py-3">
                                 { (t.profileImageUrl ?? t.teacherProfile?.profileImageUrl) ? (
-                                  <img src={(t.profileImageUrl ?? t.teacherProfile?.profileImageUrl) || ''} alt={`${t.name ?? t.firstName ?? ''} avatar`} className="w-10 h-10 rounded-full object-cover" />
-                                ) : (
-                                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs text-slate-500">No</div>
-                                ) }
+                                    <Image src={(t.profileImageUrl ?? t.teacherProfile?.profileImageUrl) || ''} alt={`${t.name ?? t.firstName ?? ''} avatar`} className="w-10 h-10 rounded-full object-cover" width={40} height={40} />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs text-slate-500">No</div>
+                                  ) }
                               </td>
                               <td className="px-4 py-3">
                                 <div className="font-medium">{t.name ?? `${t.firstName ?? ''} ${t.lastName ?? ''}`}</div>
@@ -448,7 +428,7 @@ export default function AdminNavbar() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
                               { (t.profileImageUrl ?? t.teacherProfile?.profileImageUrl) ? (
-                                <img src={(t.profileImageUrl ?? t.teacherProfile?.profileImageUrl) || ''} alt={`${t.name ?? t.firstName ?? ''} avatar`} className="w-12 h-12 rounded-full object-cover" />
+                                <Image src={(t.profileImageUrl ?? t.teacherProfile?.profileImageUrl) || ''} alt={`${t.name ?? t.firstName ?? ''} avatar`} className="w-12 h-12 rounded-full object-cover" width={48} height={48} />
                               ) : (
                                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-xs text-slate-500">No</div>
                               ) }
@@ -545,7 +525,7 @@ export default function AdminNavbar() {
                             <tr key={s.id} className="border-t bg-white">
                               <td className="px-4 py-3">
                                 { s.profileImageUrl ? (
-                                  <img src={s.profileImageUrl} alt={`${s.name ?? s.firstName ?? ''} avatar`} className="w-10 h-10 rounded-full object-cover" />
+                                  <Image src={s.profileImageUrl} alt={`${s.name ?? s.firstName ?? ''} avatar`} className="w-10 h-10 rounded-full object-cover" width={40} height={40} />
                                 ) : (
                                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs text-slate-500">No</div>
                                 ) }
@@ -573,7 +553,7 @@ export default function AdminNavbar() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
                               { s.profileImageUrl ? (
-                                <img src={s.profileImageUrl} alt={`${s.name ?? s.firstName ?? ''} avatar`} className="w-12 h-12 rounded-full object-cover" />
+                                <Image src={s.profileImageUrl} alt={`${s.name ?? s.firstName ?? ''} avatar`} className="w-12 h-12 rounded-full object-cover" width={48} height={48} />
                               ) : (
                                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-xs text-slate-500">No</div>
                               ) }
@@ -635,7 +615,7 @@ export default function AdminNavbar() {
                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                           <div className="flex items-center gap-3">
                             {a.user?.profileImageUrl ? (
-                              <img src={a.user.profileImageUrl} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
+                              <Image src={a.user.profileImageUrl} alt="avatar" className="w-12 h-12 rounded-full object-cover" width={48} height={48} />
                             ) : (
                               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-sm text-slate-500">No</div>
                             )}
@@ -661,15 +641,18 @@ export default function AdminNavbar() {
                         </div>
 
                         <div className="mt-3 flex items-center gap-2">
-                          <button
-                            onClick={() => { if (a.docsStatus === 'VERIFIED') return; handleApprovalAction(a.id, 'approve'); }}
-                            aria-disabled={a.docsStatus === 'VERIFIED'}
-                            disabled={a.docsStatus === 'VERIFIED'}
-                            className={`px-3 py-2 rounded-md bg-emerald-600 text-white text-sm ${a.docsStatus === 'VERIFIED' ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                            Approve
-                          </button>
+                          {/* If profile is VERIFIED (visible on mentors page) show Remove button; otherwise show Approve */}
+                          {a.docsStatus === 'VERIFIED' ? (
+                            <button onClick={() => handleApprovalAction(a.id, 'remove')} className="px-3 py-2 rounded-md bg-gray-200 text-sm text-red-600">Remove</button>
+                          ) : (
+                            <button
+                              onClick={() => handleApprovalAction(a.id, 'approve')}
+                              className="px-3 py-2 rounded-md bg-emerald-600 text-white text-sm">
+                              Approve
+                            </button>
+                          )}
+
                           <button onClick={() => handleApprovalAction(a.id, 'reject')} className="px-3 py-2 rounded-md bg-red-600 text-white text-sm">Reject</button>
-                          <button onClick={() => handleApprovalAction(a.id, 'remove')} className="px-3 py-2 rounded-md bg-gray-200 text-sm text-red-600">Remove</button>
                         </div>
                       </div>
                     ))}

@@ -2,7 +2,6 @@ import EventEmitter from 'events';
 
 declare global {
   // allow attaching serverEvents for hot-reload during development
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   var serverEvents: EventEmitter | undefined;
 }
 
