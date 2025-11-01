@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
     // Use raw SQL to fetch pending, verified and removed profiles so cards remain visible to admin
     const rows = (await prisma.$queryRaw`
-      SELECT tp.id, tp."userId", tp."profileImageUrl", tp."createdAt", tp."updatedAt", tp."resumeUrl", tp."idCardUrl", tp."degreeProofUrl", tp."docsStatus", tp.bio, tp.degree, tp."experienceYears", tp.subjects, tp."displayName", tp."hourlyRate",
+      SELECT tp.id, tp."userId", tp."profileImageUrl", tp."createdAt", tp."updatedAt", tp."resumeUrl", tp."idCardUrl", tp."degreeProofUrl", tp."docsStatus", tp.bio, tp.degree, tp."experienceYears", tp.subjects, tp."displayName", tp."hourlyRate", tp."docsUploadAttempts",
              u.id as "user_id", u.email, u.name, u."firstName", u."lastName", u."profileImageUrl" as "userProfileImageUrl", u."createdAt" as "userCreatedAt"
       FROM "TeacherProfile" tp
       JOIN "User" u ON tp."userId" = u.id
@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
         subjects: unknown;
         displayName: string | null;
         hourlyRate: number | null;
+        docsUploadAttempts: number | null;
         user_id: string;
         email: string;
         name: string | null;
@@ -56,6 +57,7 @@ export async function GET(req: NextRequest) {
         experienceYears: row.experienceYears ?? null,
         subjects: row.subjects ?? null,
         displayName: row.displayName ?? null,
+        docsUploadAttempts: (row.docsUploadAttempts ?? 0) as number,
         hourlyRate: row.hourlyRate ?? null,
         createdAt: row.createdAt ?? '',
         updatedAt: row.updatedAt ?? '',

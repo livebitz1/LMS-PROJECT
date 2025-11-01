@@ -34,6 +34,11 @@ type Profile = {
   profileImageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
+  // added document fields
+  resumeUrl?: string | null;
+  idCardUrl?: string | null;
+  degreeProofUrl?: string | null;
+  docsStatus?: string | null;
 };
 
 export default function TeacherProfileEditor({ user, profile }: { user: User; profile?: Profile | null }) {
@@ -249,9 +254,93 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
   const [degreeFile, setDegreeFile] = useState<File | null>(null);
   const [uploadingDocs, setUploadingDocs] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const existingAttempts = (profile as unknown as { docsUploadAttempts?: number | null })?.docsUploadAttempts ?? 0;
+  const MAX_TRIES = 3;
+  const remainingTries = Math.max(0, MAX_TRIES - existingAttempts);
 
   // helper to preview image if needed
   const urlFromFile = (f: File | null) => (f ? URL.createObjectURL(f) : null);
+
+  const filenameFromUrl = (u?: string | null) => {
+    if (!u) return null;
+    try {
+      const p = new URL(u).pathname.split('/').pop();
+      return p ? decodeURIComponent(p) : null;
+    } catch {
+      // fallback to naive split
+      const parts = u.split('/');
+      return parts[parts.length - 1] ?? null;
+    }
+  };
+
+  // Produce a human-friendly filename by removing long random tokens (cloudinary ids)
+  const prettyFilename = (raw?: string | null) => {
+    const name = raw ? raw : '';
+    if (!name) return null;
+    // strip extension
+    const extMatch = name.match(/(\.[a-z0-9]+)$/i);
+    const ext = extMatch ? extMatch[1] : '';
+    const base = name.replace(/(\.[a-z0-9]+)$/i, '');
+    // split on common separators
+    const tokens = base.split(/[_\-\.\s]+/).filter(Boolean);
+    // remove tokens that look like cloudinary/public ids: long alphanumeric sequences
+    const filtered = tokens.filter((t) => {
+      if (/^v?\d+$/.test(t)) return false; // version numbers
+      if (/^[a-z0-9]{6,}$/i.test(t)) return false; // long random token
+      return true;
+    });
+    const candidate = filtered.join(' ');
+    if (candidate.trim().length === 0) {
+      // fallback to short original base
+      return base.length > 24 ? base.slice(0, 20) + '...' + ext : base + ext;
+    }
+    return candidate + ext;
+  };
+
+  // If filename looks like a random token, fall back to a friendly field label
+  const isLikelyRandomToken = (name?: string | null) => {
+    if (!name) return false;
+    const base = name.replace(/(\.[a-z0-9]+)$/i, '');
+    // consider random if single token 6+ chars with no separators
+    if (/^[a-z0-9]{6,}$/i.test(base)) return true;
+    return false;
+  };
+
+  const prettyOrLabel = (raw?: string | null, fieldLabel = 'File') => {
+    const filename = raw ?? null;
+    const pretty = filename ? prettyFilename(filename) : null;
+    if (isLikelyRandomToken(filename)) return `${fieldLabel} uploaded`;
+    return pretty ?? null;
+  };
+
+  // Return either the local name, a friendly pretty name, or a prompt telling the user to re-upload
+  const displayNameOrUploadPrompt = (localFile: File | null, remoteFilename?: string | null, fieldLabel = 'File') => {
+    if (localFile) return localFile.name;
+    if (!remoteFilename) return 'No file';
+    if (isLikelyRandomToken(remoteFilename)) return `Please upload a ${fieldLabel.toLowerCase()} — filename will appear after upload`;
+    return prettyFilename(remoteFilename) ?? 'Uploaded';
+  };
+
+  // Refs to hidden inputs so we can trigger them programmatically and support clicking the prompt text
+  const resumeInputRef = useRef<HTMLInputElement | null>(null);
+  const idcardInputRef = useRef<HTMLInputElement | null>(null);
+  const degreeInputRef = useRef<HTMLInputElement | null>(null);
+
+  const triggerFileInput = (ref: React.RefObject<HTMLInputElement | null>) => {
+    if (remainingTries <= 0) {
+      setUploadMessage('You have reached the maximum number of document uploads (3). Please contact support.');
+      return;
+    }
+    ref.current?.click();
+  };
+
+  // small helper to clear a chosen file
+  const clearFile = (which: 'resume' | 'idcard' | 'degree') => {
+    if (which === 'resume') setResumeFile(null);
+    if (which === 'idcard') setIdCardFile(null);
+    if (which === 'degree') setDegreeFile(null);
+    setUploadMessage(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -400,64 +489,126 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
 
       <div>
         <label className="block mb-2 text-sm font-medium">Required documents (Resume, Aadhaar, Degree)</label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs mb-1">Resume (PDF/DOCX) — required</label>
-            <input type="file" accept=".pdf,.doc,.docx" onChange={(e)=>setResumeFile(e.target.files?.[0] ?? null)} />
-            {resumeFile && <div className="mt-1 text-xs text-slate-600">Selected: {resumeFile.name}</div>}
-          </div>
-
-          <div>
-            <label className="block text-xs mb-1">Aadhaar (image) — required</label>
-            <input type="file" accept="image/*" onChange={(e)=>setIdCardFile(e.target.files?.[0] ?? null)} />
-            {idCardFile && (
-              <div className="mt-1">
-                <Image src={urlFromFile(idCardFile)!} alt="aadhaar preview" className="w-24 h-24 object-cover rounded-md" width={96} height={96} />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Resume card */}
+          <div className="border rounded-lg p-3 bg-white shadow-sm flex flex-col gap-2" onDrop={(e)=>{ e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f) setResumeFile(f); }} onDragOver={(e)=>e.preventDefault()}>
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium">Resume</div>
+              <div className={`text-xs px-2 py-1 rounded-full ${profile?.docsStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-50 text-amber-800'}`}>{profile?.docsStatus ?? 'N/A'}</div>
+            </div>
+            <div className="text-xs text-slate-500">PDF or Word document (visible to admins)</div>
+            <div className="flex items-center gap-3">
+              <input ref={resumeInputRef} id="resume-file" type="file" accept=".pdf,.doc,.docx" onChange={(e)=>setResumeFile(e.target.files?.[0] ?? null)} className="hidden" disabled={remainingTries <= 0} />
+              <label htmlFor="resume-file" className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm ${remainingTries <= 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-slate-50'}`}>Choose file</label>
+              <button type="button" onClick={()=>triggerFileInput(resumeInputRef)} className="text-xs text-slate-600 min-w-0 truncate text-left" aria-label="Open resume picker" disabled={remainingTries <= 0}>{displayNameOrUploadPrompt(resumeFile, filenameFromUrl(profile?.resumeUrl), 'Resume')}</button>
+              {resumeFile && (
+                <button type="button" onClick={()=>clearFile('resume')} className="text-xs text-red-600 ml-2">Remove</button>
+              )}
+            </div>
+            {profile?.resumeUrl && (
+              <div className="mt-2 text-xs">
+                <a href={`/api/admin/approvals/resume/${profile?.id}`} target="_blank" rel="noreferrer" className="text-emerald-600 underline">View uploaded resume</a>
               </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs mb-1">Degree proof (PDF/image) — required</label>
-            <input type="file" accept=".pdf,image/*" onChange={(e)=>setDegreeFile(e.target.files?.[0] ?? null)} />
-            {degreeFile && <div className="mt-1 text-xs text-slate-600">Selected: {degreeFile.name}</div>}
+          {/* Aadhaar card */}
+          <div className="border rounded-lg p-3 bg-white shadow-sm flex flex-col gap-2" onDrop={(e)=>{ e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f) setIdCardFile(f); }} onDragOver={(e)=>e.preventDefault()}>
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium">Aadhaar</div>
+              <div className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-700">Image</div>
+            </div>
+            <div className="text-xs text-slate-500">Clear photo of your ID (jpeg/png)</div>
+            <div className="flex items-center gap-3">
+              <input ref={idcardInputRef} id="idcard-file" type="file" accept="image/*" onChange={(e)=>setIdCardFile(e.target.files?.[0] ?? null)} className="hidden" disabled={remainingTries <= 0} />
+              <label htmlFor="idcard-file" className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm ${remainingTries <= 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-slate-50'}`}>Choose image</label>
+              <button type="button" onClick={()=>triggerFileInput(idcardInputRef)} className="min-w-0 truncate text-xs text-slate-600 text-left" disabled={remainingTries <= 0}>{displayNameOrUploadPrompt(idCardFile, filenameFromUrl(profile?.idCardUrl), 'Aadhaar')}</button>
+              {idCardFile && (
+                <button type="button" onClick={()=>clearFile('idcard')} className="text-xs text-red-600 ml-2">Remove</button>
+              )}
+            </div>
+            {idCardFile ? (
+              <div className="mt-2 text-xs text-slate-600">Selected: {idCardFile.name}</div>
+            ) : profile?.idCardUrl ? (
+              <div className="mt-2 text-xs">
+                <a href={profile.idCardUrl} target="_blank" rel="noreferrer" className="text-emerald-600 underline">View uploaded Aadhaar</a>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Degree card */}
+          <div className="border rounded-lg p-3 bg-white shadow-sm flex flex-col gap-2" onDrop={(e)=>{ e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f) setDegreeFile(f); }} onDragOver={(e)=>e.preventDefault()}>
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium">Degree proof</div>
+              <div className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-700">PDF / Image</div>
+            </div>
+            <div className="text-xs text-slate-500">Upload degree certificate (PDF/image)</div>
+            <div className="flex items-center gap-3">
+              <input ref={degreeInputRef} id="degree-file" type="file" accept=".pdf,image/*" onChange={(e)=>setDegreeFile(e.target.files?.[0] ?? null)} className="hidden" disabled={remainingTries <= 0} />
+              <label htmlFor="degree-file" className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm ${remainingTries <= 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-slate-50'}`}>Choose file</label>
+              <button type="button" onClick={()=>triggerFileInput(degreeInputRef)} className="min-w-0 truncate text-xs text-slate-600 text-left" disabled={remainingTries <= 0}>{displayNameOrUploadPrompt(degreeFile, filenameFromUrl(profile?.degreeProofUrl), 'Degree')}</button>
+              {degreeFile && (
+                <button type="button" onClick={()=>clearFile('degree')} className="text-xs text-red-600 ml-2">Remove</button>
+              )}
+            </div>
+            {degreeFile && <div className="mt-2 text-xs text-slate-600">Selected: {degreeFile.name}</div>}
+            {profile?.degreeProofUrl && !degreeFile && (
+              <div className="mt-2 text-xs">
+                <a href={profile.degreeProofUrl} target="_blank" rel="noreferrer" className="text-emerald-600 underline">View uploaded degree</a>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
-          <Button onClick={async ()=>{
-            setUploadMessage(null);
-            // validate before upload
-            const typesDoc = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-            const typesImage = ['image/jpeg','image/png','image/webp'];
-            if (!resumeFile || !idCardFile || !degreeFile) { setUploadMessage('Please select all three required files'); return; }
-            if (!typesDoc.includes(resumeFile.type)) { setUploadMessage('Resume must be a PDF or Word document'); return; }
-            if (!typesImage.includes(idCardFile.type)) { setUploadMessage('Aadhaar must be an image (jpeg/png/webp)'); return; }
-            if (![...typesImage, 'application/pdf'].includes(degreeFile.type)) { setUploadMessage('Degree must be PDF or image'); return; }
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-sm text-slate-600">{uploadMessage ?? (remainingTries <= 0 ? 'No uploads left — contact support' : `${remainingTries} upload${remainingTries === 1 ? '' : 's'} left`)}</div>
+          <div className="flex items-center gap-2">
+            <Button onClick={async () =>{
+              setUploadMessage(null);
+              if (remainingTries <= 0) { setUploadMessage('You have reached the maximum number of document uploads (3). Please contact support.'); return; }
+              // validate before upload
+              const typesDoc = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+              const typesImage = ['image/jpeg','image/png','image/webp'];
+              if (!resumeFile && !profile?.resumeUrl) { setUploadMessage('Please select a resume file'); return; }
+              if (!idCardFile && !profile?.idCardUrl) { setUploadMessage('Please select an Aadhaar image'); return; }
+              if (!degreeFile && !profile?.degreeProofUrl) { setUploadMessage('Please select a degree file'); return; }
+              if (resumeFile && !typesDoc.includes(resumeFile.type)) { setUploadMessage('Resume must be a PDF or Word document'); return; }
+              if (idCardFile && !typesImage.includes(idCardFile.type)) { setUploadMessage('Aadhaar must be an image (jpeg/png/webp)'); return; }
+              if (degreeFile && ![...typesImage, 'application/pdf'].includes(degreeFile.type)) { setUploadMessage('Degree must be PDF or image'); return; }
 
-            setUploadingDocs(true);
-            try {
-              const fd = new FormData();
-              fd.append('resume', resumeFile as File);
-              fd.append('idCard', idCardFile as File);
-              fd.append('degree', degreeFile as File);
-              const res = await fetch('/api/teacher/docs', { method: 'POST', body: fd });
-              const json = await res.json();
-              if (!res.ok) throw new Error(json?.error ?? 'Upload failed');
-              setUploadMessage('Uploaded successfully and pending verification');
-              // refresh profile (server state) so uploaded URLs show
-              router.refresh();
-              setResumeFile(null);
-              setIdCardFile(null);
-              setDegreeFile(null);
-            } catch (err) {
-              setUploadMessage(String((err as Error)?.message ?? err));
-            } finally { setUploadingDocs(false); }
-          }} disabled={uploadingDocs}>
-            {uploadingDocs ? 'Uploading...' : 'Upload documents'}
-          </Button>
+              setUploadingDocs(true);
+              try {
+                const fd = new FormData();
+                if (resumeFile) fd.append('resume', resumeFile as File);
+                if (idCardFile) fd.append('idCard', idCardFile as File);
+                if (degreeFile) fd.append('degree', degreeFile as File);
+                const res = await fetch('/api/teacher/docs', { method: 'POST', body: fd });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json?.error ?? 'Upload failed');
+                setUploadMessage('Uploaded successfully and pending verification');
+                // refresh profile (server state) so uploaded URLs show
+                router.refresh();
+                setResumeFile(null);
+                setIdCardFile(null);
+                setDegreeFile(null);
+                // keep loader visible until router refresh has a chance to update tries/status
+                await new Promise((r) => setTimeout(r, 900));
+                setUploadingDocs(false);
+              } catch (err) {
+                setUploadMessage(String((err as Error)?.message ?? err));
+                setUploadingDocs(false);
+              } finally { if (!uploadingDocs) { /* noop - already handled */ } }
+            }} disabled={uploadingDocs || remainingTries <= 0}>
+              {uploadingDocs ? (
+                <span className="inline-flex items-center gap-2">
+                  <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+                  <span>Uploading...</span>
+                </span>
+              ) : remainingTries <= 0 ? 'No uploads left' : `Upload documents (${remainingTries} tries left)`}
+            </Button>
 
-          <div className="text-sm text-slate-600">{uploadMessage}</div>
+            <Button variant="ghost" onClick={() => { setResumeFile(null); setIdCardFile(null); setDegreeFile(null); setUploadMessage(null); }}>Reset</Button>
+          </div>
         </div>
       </div>
 

@@ -64,6 +64,7 @@ model TeacherProfile {
   idCardUrl       String?
   degreeProofUrl  String?
   docsStatus      String?
+  docsUploadAttempts Int    @default(0)
   user            User     @relation(fields: [userId], references: [id])
 }
 

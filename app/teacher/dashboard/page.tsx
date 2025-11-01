@@ -8,6 +8,7 @@ import Navbar from '../../components/Navbar'
 import { redirect } from 'next/navigation'
 import type { TeacherProfile } from '@prisma/client';
 import Image from 'next/image';
+import BookingItemClient from './BookingItemClient'
 
 export const metadata = {
   title: 'Teacher Dashboard',
@@ -82,8 +83,14 @@ export default async function TeacherDashboardPage() {
             : [],
         linkedin: teacherProfile.linkedin ?? null,
         profileImageUrl: teacherProfile.profileImageUrl ?? null,
+        // document URLs and status for the client editor
+        resumeUrl: (teacherProfile as unknown as { resumeUrl?: string | null }).resumeUrl ?? null,
+        idCardUrl: (teacherProfile as unknown as { idCardUrl?: string | null }).idCardUrl ?? null,
+        degreeProofUrl: (teacherProfile as unknown as { degreeProofUrl?: string | null }).degreeProofUrl ?? null,
+        docsStatus: (teacherProfile as unknown as { docsStatus?: string | null }).docsStatus ?? null,
         hourlyRate: teacherProfile.hourlyRate ?? null,
         contact: (teacherProfile as unknown as { contact?: string | null }).contact ?? null,
+        docsUploadAttempts: (teacherProfile as unknown as { docsUploadAttempts?: number | null }).docsUploadAttempts ?? 0,
         createdAt: teacherProfile.createdAt ? teacherProfile.createdAt.toISOString() : '',
         updatedAt: teacherProfile.updatedAt ? teacherProfile.updatedAt.toISOString() : '',
       }
@@ -107,24 +114,7 @@ export default async function TeacherDashboardPage() {
             <h2 className="text-xl font-semibold mb-2">Recent Bookings</h2>
             <div className="space-y-4">
               {bookings.map((b) => (
-                <div key={b.id} className="border border-emerald-100 rounded-xl p-4 bg-white shadow-sm flex flex-col sm:flex-row items-center gap-4">
-                  <div className="flex-shrink-0">
-                    {/* Use next/image for optimized images */}
-                    <Image
-                      src={b.student?.profileImageUrl || '/default-avatar.png'}
-                      alt={b.student?.name || 'Student'}
-                      width={48}
-                      height={48}
-                      className="w-12 h-12 rounded-full object-cover border border-emerald-200 shadow-sm"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-slate-900">{b.studentName}</div>
-                    {/* Removed student email from card display */}
-                    {b.message && <div className="text-sm text-slate-700 mb-1">Message: {b.message}</div>}
-                    <div className="text-xs text-slate-400">Booked on {new Date(b.createdAt).toLocaleString()}</div>
-                  </div>
-                </div>
+                <BookingItemClient key={b.id} id={b.id} studentName={b.studentName} message={b.message ?? undefined} createdAt={b.createdAt.toISOString()} student={b.student ?? undefined} />
               ))}
             </div>
           </div>

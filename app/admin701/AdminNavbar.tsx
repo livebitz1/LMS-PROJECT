@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import Dialog, { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 type TeacherProfile = {
   id?: string;
@@ -218,6 +219,13 @@ export default function AdminNavbar() {
   const [loadingApprovals, setLoadingApprovals] = useState(false);
   const [approvalsError, setApprovalsError] = useState<string | null>(null);
   const approvalsEventRef = React.useRef<EventSource | null>(null);
+  // UI state to support inline reject confirmation per-card
+  const [pendingRejectId, setPendingRejectId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState<string>('');
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  // UI state to support inline remove confirmation modal
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (tab !== 'approvals') return;
@@ -247,7 +255,7 @@ export default function AdminNavbar() {
         try {
           const payload = JSON.parse((ev as MessageEvent).data);
           // reload approvals when change detected
-          if (payload?.type === 'approval_changed') {
+          if (payload?.type === 'approval_changed' || payload?.type === 'docs_reuploaded') {
             load();
             // refresh teachers list when approvals change so UI stays in sync
             // trigger teachers reload
@@ -263,17 +271,20 @@ export default function AdminNavbar() {
     return () => { cancelled = true; if (approvalsEventRef.current) { approvalsEventRef.current.close(); approvalsEventRef.current = null; } };
   }, [tab]);
 
-  async function handleApprovalAction(profileId: string, action: 'approve' | 'reject' | 'remove') {
+  async function handleApprovalAction(profileId: string, action: 'approve' | 'reject' | 'remove', reason?: string) {
     try {
-      const reason = action === 'reject' ? window.prompt('Optional rejection reason (shown to teacher):') : undefined;
+      // If caller didn't provide a reason for rejection, fall back to prompt (preserve prior behavior)
+      let useReason = reason;
+      if (action === 'reject' && typeof useReason === 'undefined') {
+        useReason = window.prompt('Optional rejection reason (shown to teacher):') ?? undefined;
+      }
       if (action === 'remove') {
-        const ok = window.confirm('Remove this teacher? This will hide them from the Mentors page.');
-        if (!ok) return;
+        // Confirmation for 'remove' is handled via the admin modal — no native confirm here
       }
       const res = await fetch('/api/admin/approvals/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileId, action, reason }),
+        body: JSON.stringify({ profileId, action, reason: useReason }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error ?? 'Action failed');
@@ -629,7 +640,7 @@ export default function AdminNavbar() {
 
                           <div className="flex items-center gap-2">
                             {a.resumeUrl && (
-                              <a href={a.resumeUrl} target="_blank" rel="noreferrer" className="text-sm text-emerald-700 hover:underline">Resume</a>
+                              <a href={`/api/admin/approvals/resume/${a.id}`} target="_blank" rel="noreferrer" className="text-sm text-emerald-700 hover:underline">Resume</a>
                             )}
                             {a.idCardUrl && (
                               <a href={a.idCardUrl} target="_blank" rel="noreferrer" className="text-sm text-emerald-700 hover:underline">Aadhaar</a>
@@ -637,30 +648,175 @@ export default function AdminNavbar() {
                             {a.degreeProofUrl && (
                               <a href={a.degreeProofUrl} target="_blank" rel="noreferrer" className="text-sm text-emerald-700 hover:underline">Degree</a>
                             )}
+
+                            <div className="ml-3 px-2 py-1 rounded-full bg-slate-100 text-xs text-slate-700 border border-slate-200">
+                              Attempts left: {Math.max(0, 3 - ((a as unknown as { docsUploadAttempts?: number })?.docsUploadAttempts ?? 0))}
+                            </div>
                           </div>
                         </div>
 
                         <div className="mt-3 flex items-center gap-2">
-                          {/* If profile is VERIFIED (visible on mentors page) show Remove button; otherwise show Approve */}
                           {a.docsStatus === 'VERIFIED' ? (
-                            <button onClick={() => handleApprovalAction(a.id, 'remove')} className="px-3 py-2 rounded-md bg-gray-200 text-sm text-red-600">Remove</button>
+                            <button onClick={() => setPendingRemoveId(a.id)} className="px-3 py-2 rounded-md bg-gray-200 text-sm text-red-600">Remove</button>
                           ) : (
-                            <button
-                              onClick={() => handleApprovalAction(a.id, 'approve')}
-                              className="px-3 py-2 rounded-md bg-emerald-600 text-white text-sm">
-                              Approve
-                            </button>
+                            <button onClick={() => handleApprovalAction(a.id, 'approve')} className="px-3 py-2 rounded-md bg-emerald-600 text-white text-sm">Approve</button>
                           )}
 
-                          <button onClick={() => handleApprovalAction(a.id, 'reject')} className="px-3 py-2 rounded-md bg-red-600 text-white text-sm">Reject</button>
+                          {/* Inline reject confirmation UI */}
+                          {pendingRejectId === a.id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                value={rejectReason}
+                                onChange={(e) => setRejectReason(e.target.value)}
+                                placeholder="Optional rejection reason"
+                                className="px-2 py-1 rounded-md border text-sm w-64"
+                                aria-label="Rejection reason"
+                                disabled={rejectingId === a.id}
+                              />
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    setRejectingId(a.id);
+                                    await handleApprovalAction(a.id, 'reject', rejectReason || undefined);
+                                  } finally {
+                                    setRejectingId(null);
+                                    setPendingRejectId(null);
+                                    setRejectReason('');
+                                  }
+                                }}
+                                disabled={rejectingId === a.id}
+                                className="px-3 py-2 rounded-md bg-red-600 text-white text-sm"
+                              >
+                                {rejectingId === a.id ? 'Rejecting...' : 'Confirm Reject'}
+                              </button>
+                              <button onClick={() => { setPendingRejectId(null); setRejectReason(''); }} disabled={rejectingId === a.id} className="px-3 py-2 rounded-md bg-slate-100 text-sm">Cancel</button>
+                            </div>
+                          ) : (
+                            <button onClick={() => setPendingRejectId(a.id)} className="px-3 py-2 rounded-md bg-red-600 text-white text-sm">Reject</button>
+                          )}
                         </div>
                       </div>
                     ))}
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
+
+                    {/* Confirmation dialog for reject action */}
+                    <Dialog open={!!pendingRejectId} onOpenChange={(open) => { if (!open) { setPendingRejectId(null); setRejectReason(''); } }}>
+                      <DialogContent className="sm:max-w-md rounded-xl">
+                        <DialogHeader>
+                          <DialogTitle className="text-lg font-bold text-slate-900">Confirm rejection</DialogTitle>
+                          <DialogDescription className="text-sm text-slate-600 mt-2">Rejecting a teacher will remove their pending approval and notify them (if a reason is provided). This action cannot be undone from this screen.</DialogDescription>
+                        </DialogHeader>
+
+                        <div className="px-6 py-4">
+                          {pendingRejectId ? (() => {
+                            const profile = approvals.find((x) => x.id === pendingRejectId);
+                            if (!profile) return <div className="text-sm text-slate-600">Profile not found.</div>;
+                            return (
+                              <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-3">
+                                  {profile.user?.profileImageUrl ? (
+                                    <Image src={profile.user.profileImageUrl} alt="avatar" width={48} height={48} className="w-12 h-12 rounded-full object-cover" />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-sm text-slate-500">No</div>
+                                  )}
+                                  <div>
+                                    <div className="font-medium">{profile.user?.name ?? `${profile.user?.firstName ?? ''} ${profile.user?.lastName ?? ''}`}</div>
+                                    <div className="text-xs text-slate-500">{profile.user?.email}</div>
+                                  </div>
+                                </div>
+
+                                <div className="text-sm">
+                                  <div className="mb-1">Uploaded documents:</div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {profile.resumeUrl && <a href={`/api/admin/approvals/resume/${profile.id}`} target="_blank" rel="noreferrer" className="text-sm text-emerald-700 hover:underline">Resume</a>}
+                                    {profile.idCardUrl && <a href={profile.idCardUrl} target="_blank" rel="noreferrer" className="text-sm text-emerald-700 hover:underline">Aadhaar</a>}
+                                    {profile.degreeProofUrl && <a href={profile.degreeProofUrl} target="_blank" rel="noreferrer" className="text-sm text-emerald-700 hover:underline">Degree</a>}
+                                  </div>
+                                </div>
+
+                                <label className="text-sm text-slate-700">Optional rejection reason (shown to teacher)</label>
+                                <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} className="w-full p-2 border rounded-md text-sm" rows={4} />
+                              </div>
+                            );
+                          })() : null}
+                        </div>
+
+                        <DialogFooter>
+                          <button onClick={() => { setPendingRejectId(null); setRejectReason(''); }} className="px-3 py-2 rounded-md bg-slate-100 text-sm">Cancel</button>
+                          <button
+                            onClick={async () => {
+                              if (!pendingRejectId) return;
+                              try {
+                                setRejectingId(pendingRejectId);
+                                await handleApprovalAction(pendingRejectId, 'reject', rejectReason || undefined);
+                                setPendingRejectId(null);
+                                setRejectReason('');
+                              } finally {
+                                setRejectingId(null);
+                              }
+                            }}
+                            disabled={!!rejectingId}
+                            className="px-3 py-2 rounded-md bg-red-600 text-white text-sm"
+                          >
+                            {rejectingId ? 'Rejecting...' : 'Confirm reject'}
+                          </button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* Remove confirmation dialog */}
+                    <Dialog open={!!pendingRemoveId} onOpenChange={(open) => { if (!open) setPendingRemoveId(null); }}>
+                      <DialogContent className="sm:max-w-md rounded-xl">
+                        <DialogHeader>
+                          <DialogTitle className="text-lg font-bold text-slate-900">Confirm removal</DialogTitle>
+                          <DialogDescription className="text-sm text-slate-600 mt-2">Removing this teacher will temporarily hide them from the Mentors Page. You can restore their profile at any time in the future.</DialogDescription>
+                        </DialogHeader>
+
+                        <div className="px-6 py-4">
+                          {pendingRemoveId ? (() => {
+                            const profile = approvals.find((x) => x.id === pendingRemoveId);
+                            if (!profile) return <div className="text-sm text-slate-600">Profile not found.</div>;
+                            return (
+                              <div className="flex items-center gap-3">
+                                {profile.user?.profileImageUrl ? (
+                                  <Image src={profile.user.profileImageUrl} alt="avatar" width={48} height={48} className="w-12 h-12 rounded-full object-cover" />
+                                ) : (
+                                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-sm text-slate-500">No</div>
+                                )}
+                                <div>
+                                  <div className="font-medium">{profile.user?.name ?? `${profile.user?.firstName ?? ''} ${profile.user?.lastName ?? ''}`}</div>
+                                  <div className="text-xs text-slate-500">{profile.user?.email}</div>
+                                </div>
+                              </div>
+                            );
+                          })() : null}
+                        </div>
+
+                        <DialogFooter>
+                          <button onClick={() => setPendingRemoveId(null)} className="px-3 py-2 rounded-md bg-slate-100 text-sm">Cancel</button>
+                          <button
+                            onClick={async () => {
+                              if (!pendingRemoveId) return;
+                              try {
+                                setRemovingId(pendingRemoveId);
+                                await handleApprovalAction(pendingRemoveId, 'remove');
+                                setPendingRemoveId(null);
+                              } finally {
+                                setRemovingId(null);
+                              }
+                            }}
+                            disabled={!!removingId}
+                            className="px-3 py-2 rounded-md bg-gray-800 text-white text-sm"
+                          >
+                            {removingId ? 'Removing...' : 'Confirm remove'}
+                          </button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                   </div>
+                 )}
+               </div>
+             </section>
+           )}
         </div>
       </div>
     </div>

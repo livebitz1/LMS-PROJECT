@@ -1,24 +1,30 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '../../../../../lib/prisma';
 
-// @ts-expect-error Next.js dynamic API route context must be untyped
-export async function GET(req: NextRequest, context) {
+export async function GET(request: NextRequest) {
   try {
-    const { params } = context as { params: { clerkId: string } };
-    const clerkId = params.clerkId;
+    // Extract clerkId from the request URL path (last segment)
+    const url = new URL(request.url);
+    const pathSegments = url.pathname.split('/').filter(Boolean);
+    const clerkId = pathSegments[pathSegments.length - 1];
+
+    if (!clerkId) {
+      const placeholderUrl = new URL('/placeholder.svg', request.url);
+      return NextResponse.redirect(placeholderUrl);
+    }
 
     const user = await prisma.user.findUnique({ where: { clerkId } });
     if (!user || !user.profileImageUrl) {
       // redirect to placeholder in public folder
-      const url = new URL('/placeholder.svg', req.url);
-      return NextResponse.redirect(url);
+      const url2 = new URL('/placeholder.svg', request.url);
+      return NextResponse.redirect(url2);
     }
 
     // Fetch the remote image and proxy it
     const imageRes = await fetch(user.profileImageUrl, { method: 'GET' });
     if (!imageRes.ok) {
-      const url = new URL('/placeholder.svg', req.url);
-      return NextResponse.redirect(url);
+      const url3 = new URL('/placeholder.svg', request.url);
+      return NextResponse.redirect(url3);
     }
 
     const contentType = imageRes.headers.get('content-type') || 'application/octet-stream';
@@ -33,7 +39,7 @@ export async function GET(req: NextRequest, context) {
     });
   } catch (err) {
     console.error('/api/teacher/avatar error', err);
-    const url = new URL('/placeholder.svg', req.url);
+    const url = new URL('/placeholder.svg', request.url);
     return NextResponse.redirect(url);
   }
 }

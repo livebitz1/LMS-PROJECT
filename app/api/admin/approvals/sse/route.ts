@@ -6,10 +6,18 @@ export async function GET(req: Request) {
   const stream = new ReadableStream({
     start(controller) {
       const send = (data: unknown) => controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`));
-      const handler = (payload: unknown) => send({ type: 'approval_changed', payload });
-      serverEvents.on('approval_changed', handler);
+
+      const approvalHandler = (payload: unknown) => send({ type: 'approval_changed', payload });
+      const docsHandler = (payload: unknown) => send({ type: 'docs_reuploaded', payload });
+
+      serverEvents.on('approval_changed', approvalHandler);
+      serverEvents.on('docs_reuploaded', docsHandler);
+
       // cleanup on client disconnect
-      req.signal?.addEventListener?.('abort', () => serverEvents.off('approval_changed', handler));
+      req.signal?.addEventListener?.('abort', () => {
+        serverEvents.off('approval_changed', approvalHandler);
+        serverEvents.off('docs_reuploaded', docsHandler);
+      });
     }
   });
 
