@@ -259,6 +259,8 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
   const remainingTries = Math.max(0, MAX_TRIES - existingAttempts);
 
   // helper to preview image if needed
+  const urlFromFile = (f: File | null) => (f ? URL.createObjectURL(f) : null);
+
   const filenameFromUrl = (u?: string | null) => {
     if (!u) return null;
     try {
@@ -302,6 +304,13 @@ export default function TeacherProfileEditor({ user, profile }: { user: User; pr
     // consider random if single token 6+ chars with no separators
     if (/^[a-z0-9]{6,}$/i.test(base)) return true;
     return false;
+  };
+
+  const prettyOrLabel = (raw?: string | null, fieldLabel = 'File') => {
+    const filename = raw ?? null;
+    const pretty = filename ? prettyFilename(filename) : null;
+    if (isLikelyRandomToken(filename)) return `${fieldLabel} uploaded`;
+    return pretty ?? null;
   };
 
   // Return either the local name, a friendly pretty name, or a prompt telling the user to re-upload
