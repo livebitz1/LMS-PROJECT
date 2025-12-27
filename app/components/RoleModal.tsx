@@ -23,10 +23,23 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
         const minTop = 36; // don't place too close to the viewport top
         const top = Math.max(minTop, rawTop);
         const left = rect.left + rect.width / 2 + window.scrollX; // center relative to anchor
-        setAnchorPos({ top, left });
+
+        // measure panel height (fallback to a reasonable default)
+        const panelHeight = panelRef.current?.offsetHeight ?? 420;
+        const viewportBottom = window.scrollY + window.innerHeight;
+
+        // If the modal would extend beyond the viewport bottom, prefer centering in viewport
+        const wouldOverflow = top + panelHeight > viewportBottom - 80; // keep 80px bottom margin
+        if (!wouldOverflow) {
+          setAnchorPos({ top, left });
+        } else {
+          // clear anchorPos so the modal will center in the viewport instead
+          setAnchorPos(null);
+        }
       }
     } catch {
       // ignore
+      setAnchorPos(null);
     }
 
     // focus the panel on open for accessibility
@@ -177,6 +190,11 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
     ? { position: 'absolute', top: `${anchorPos.top}px`, left: `${anchorPos.left}px`, transform: 'translateX(-50%) translateY(-8px)', zIndex: 60 }
     : undefined;
 
+  // when no anchorPos is provided, center the modal in the viewport
+  const innerContainerClass = anchorPos
+    ? 'relative w-full h-full pointer-events-none'
+    : 'relative w-full h-full pointer-events-none flex items-center justify-center px-4';
+
   return (
     <div className="fixed inset-0 z-50 pointer-events-none">
       {/* Backdrop: soft dim, no heavy blur for light theme */}
@@ -191,7 +209,7 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
         }}
       />
 
-      <div className="relative w-full h-full pointer-events-none">
+      <div className={innerContainerClass}>
         <div
           ref={panelRef}
           role="dialog"
@@ -199,9 +217,9 @@ export default function RoleModal({ onConfirm, onCloseComplete }:{ onConfirm: (r
           aria-labelledby="role-modal-title"
           aria-describedby="role-modal-desc"
           tabIndex={-1}
-          className={`pointer-events-auto relative z-10 w-full ${anchorPos ? 'max-w-sm' : 'max-w-xl mx-auto mt-24'} bg-white rounded-lg shadow-[0_30px_60px_rgba(15,23,42,0.08)] border-4 border-[#fff1d6] p-6 text-slate-900 transition-transform transition-opacity duration-300 ease-out ${closing ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}
-          style={panelStyle}
-        >
+          className={`pointer-events-auto relative z-10 w-full ${anchorPos ? 'max-w-sm' : 'max-w-xl'} bg-white rounded-lg shadow-[0_30px_60px_rgba(15,23,42,0.08)] border-4 border-[#fff1d6] p-6 text-slate-900 transition-transform transition-opacity duration-300 ease-out ${closing ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}
+           style={panelStyle}
+         >
           <div className="flex items-start gap-4">
             <div className="flex-none w-12 h-12 rounded-md bg-amber-50 flex items-center justify-center">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
